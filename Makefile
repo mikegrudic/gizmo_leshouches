@@ -365,6 +365,7 @@ SYSTEM_OBJS =   system/system.o \
 GRAVITY_OBJS  = gravity/forcetree.o \
                 gravity/forcetree_update.o \
                 gravity/gravtree.o \
+                gravity/treecol.o \
 				gravity/cosmology.o \
 				gravity/potential.o \
 				gravity/pm_periodic.o \

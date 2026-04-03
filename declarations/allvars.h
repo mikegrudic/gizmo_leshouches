@@ -1161,19 +1161,8 @@ extern struct gravdata_out
     double Chimes_G0[CHIMES_LOCAL_UV_NBINS];
     double Chimes_fluxPhotIon[CHIMES_LOCAL_UV_NBINS];
 #endif
-#ifdef TREE_RAD
-    MyDouble Projection[NPIX];            /*!< HEALPix column density per pixel */
-#ifdef TREE_RAD_H2
-    MyDouble ProjectionH2[NPIX];          /*!< HEALPix H2 column density per pixel */
-    MyDouble ProjectionCO[NPIX];          /*!< HEALPix CO column density per pixel */
-#endif
-#endif
-#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-    MyDouble UV_flux[NPIX];               /*!< HEALPix UV flux per pixel, 6-13.6 eV */
-    MyDouble LW_flux[NPIX];               /*!< HEALPix LW flux per pixel, 11.2-13.6 eV */
-    MyDouble NUV_flux[NPIX];              /*!< HEALPix NUV flux per pixel, ~3.4-6 eV */
-    MyDouble OPT_flux[NPIX];              /*!< HEALPix optical+NIR flux per pixel, ~0.4-3.4 eV */
-#endif
+    /* TREE_RAD Projection/H2/CO and G0_VARIABLE flux arrays removed from GravDataResult —
+     * now computed in separate treecol walk (gravity/treecol.cc) with its own MPI structs */
 #ifdef SINK_COMPTON_HEATING
     MyDouble Rad_Flux_AGN;
 #endif

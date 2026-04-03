@@ -386,15 +386,7 @@ void gravity_tree(void)
 #ifdef RT_USE_TREECOL_FOR_NH
                 int kbin=0; for(kbin=0; kbin < RT_USE_TREECOL_FOR_NH; kbin++) {P[place].ColumnDensityBins[kbin] += GravDataOut[j].ColumnDensityBins[kbin];}
 #endif
-#ifdef TREE_RAD
-                if(P[place].Type == 0) {int kp; for(kp=0; kp<NPIX; kp++) CellP[place].Projection[kp] += GravDataOut[j].Projection[kp];}
-#ifdef TREE_RAD_H2
-                if(P[place].Type == 0) {int kp; for(kp=0; kp<NPIX; kp++) {CellP[place].ProjectionH2[kp] += GravDataOut[j].ProjectionH2[kp]; CellP[place].ProjectionCO[kp] += GravDataOut[j].ProjectionCO[kp];}}
-#endif
-#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-                if(P[place].Type == 0) {int kp; for(kp=0; kp<NPIX; kp++) {CellP[place].UV_flux[kp] += GravDataOut[j].UV_flux[kp]; CellP[place].LW_flux[kp] += GravDataOut[j].LW_flux[kp]; CellP[place].NUV_flux[kp] += GravDataOut[j].NUV_flux[kp]; CellP[place].OPT_flux[kp] += GravDataOut[j].OPT_flux[kp];}}
-#endif
-#endif
+    /* TREE_RAD/G0_VARIABLE result reduction moved to treecol.cc */
 #ifdef SINK_SEED_FROM_LOCALGAS_TOTALMENCCRITERIA
                 P[place].MencInRcrit += GravDataOut[j].MencInRcrit;
 #endif

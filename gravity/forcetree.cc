@@ -1674,20 +1674,8 @@ int force_treeevaluate(int target, int mode, int *exportflag, int *exportnodecou
 #ifdef RT_USE_TREECOL_FOR_NH
     double angular_bin_size = 4*M_PI / RT_USE_TREECOL_FOR_NH, treecol_angular_bins[RT_USE_TREECOL_FOR_NH] = {0};
 #endif
-#ifdef TREE_RAD
-    double treecol_Projection[NPIX] = {0};
-#ifdef TREE_RAD_H2
-    double treecol_ProjectionH2[NPIX] = {0}, treecol_ProjectionCO[NPIX] = {0};
-    double h2mass = 0, comass = 0;
-#endif
-#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-    double treecol_UV_flux[NPIX] = {0};
-    double treecol_LW_flux[NPIX] = {0};
-    double treecol_NUV_flux[NPIX] = {0};
-    double treecol_OPT_flux[NPIX] = {0};
-    double uv_lum = 0, lw_lum = 0, nuv_lum = 0, opt_lum = 0;
-#endif
-#endif
+    /* NOTE: TREE_RAD columns and G0_VARIABLE fluxes are now computed in the
+     * separate treecol walk (gravity/treecol.cc), not here. */
 #if defined(COMPUTE_JERK_IN_GRAVTREE) || defined(SINK_DYNFRICTION_FROMTREE)
     double dvx, dvy, dvz;
 #endif
@@ -1906,19 +1894,7 @@ int force_treeevaluate(int target, int mode, int *exportflag, int *exportnodecou
                 if(P[no].Type == 5) {gasmass = P[no].Sink_Mass_Reservoir;} // gas at the inner edge of a disk should not see a hole due to the sink
 #endif
 #endif
-#ifdef TREE_RAD_H2
-                h2mass = 0; comass = 0;
-                if(P[no].Type == 0) {
-                    h2mass = 2.0 * CellP[no].TracAbund[IH2] * HYDROGEN_MASSFRAC * P[no].Mass;
-#if defined(TREE_RAD_CO) && CHEMISTRYNETWORK != 1 && CHEMISTRYNETWORK != 4
-                    comass = 28.0 * CellP[no].TracAbund[ICO] * HYDROGEN_MASSFRAC * P[no].Mass;
-#endif
-                }
-#endif
-#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-                uv_lum = 0; lw_lum = 0; nuv_lum = 0; opt_lum = 0;
-                if(P[no].Type == 4 || P[no].Type == 5) {uv_lum = P[no].UV_luminosity; lw_lum = P[no].LW_luminosity; nuv_lum = P[no].NUV_luminosity; opt_lum = P[no].OPT_luminosity;}
-#endif
+    /* TREE_RAD_H2 and G0_VARIABLE data sourcing moved to treecol.cc */
 #ifdef ADAPTIVE_GRAVSOFT_FROM_TIDAL_CRITERION
                 {int ki,kj; for(ki=0;ki<3;ki++) {for(kj=0;kj<3;kj++) {j_zeta_tidal_tensorps_prevstep[ki][kj]=P[no].tidal_tensorps_prevstep[ki][kj];}}}
 #endif
@@ -2208,16 +2184,7 @@ int force_treeevaluate(int target, int mode, int *exportflag, int *exportnodecou
 #ifdef GRAVTREE_CALCULATE_GAS_MASS_IN_NODE
                 gasmass = nop->gasmass;
 #endif
-#ifdef TREE_RAD_H2
-                h2mass = nop->h2mass;
-                comass = nop->comass;
-#endif
-#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-                uv_lum = nop->uv_luminosity;
-                lw_lum = nop->lw_luminosity;
-                nuv_lum = nop->nuv_luminosity;
-                opt_lum = nop->opt_luminosity;
-#endif
+    /* TREE_RAD_H2 and G0_VARIABLE node data sourcing moved to treecol.cc */
 #ifdef GRAVITY_SPHERICAL_SYMMETRY
                 r_source = sqrt(pow(nop->u.d.s[0] - center[0],2) + pow(nop->u.d.s[1] - center[1],2) + pow(nop->u.d.s[2] - center[2],2));
 #endif
@@ -2572,33 +2539,7 @@ int force_treeevaluate(int target, int mode, int *exportflag, int *exportnodecou
                     treecol_angular_bins[bin] += fac_accel*gasmass*r / (angular_bin_size*mass); // in our binning scheme, we stretch the gas mass over a patch  of the sphere located at radius r subtending solid angle equal to the bin size - thus the area is r^2 * angular_bin_size, so sigma = m/(r^2 * angular bin size) = fac_accel/r / angular bin size. Factor of gasmass / mass corrects the gravitational mass to the gas mass
                 }
 #endif
-#ifdef TREE_RAD
-                if(gasmass > 0 && r > 0 && r < All.ShieldingLength / All.cf_atime) /* physical shielding length in comoving coords */
-                {
-                    long iheal;
-                    double vec_hp[3] = {dx, dy, dz};
-                    vec2pix_ring(NSIDE, vec_hp, &iheal);
-                    double area = (4.0*M_PI / NPIX) * r2;
-                    treecol_Projection[iheal] += gasmass / area;
-#ifdef TREE_RAD_H2
-                    treecol_ProjectionH2[iheal] += h2mass / area;
-                    treecol_ProjectionCO[iheal] += comass / area;
-#endif
-                }
-#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-                if((uv_lum > 0 || lw_lum > 0 || nuv_lum > 0 || opt_lum > 0) && r2 > 0)
-                {
-                    long iheal;
-                    double vec_hp[3] = {dx, dy, dz};
-                    vec2pix_ring(NSIDE, vec_hp, &iheal);
-                    double inv_4pi_r2 = 1.0 / (4.0*M_PI*r2);
-                    treecol_UV_flux[iheal] += uv_lum * inv_4pi_r2;
-                    treecol_LW_flux[iheal] += lw_lum * inv_4pi_r2;
-                    treecol_NUV_flux[iheal] += nuv_lum * inv_4pi_r2;
-                    treecol_OPT_flux[iheal] += opt_lum * inv_4pi_r2;
-                }
-#endif
-#endif
+    /* TREE_RAD column + G0_VARIABLE flux accumulation moved to treecol.cc */
 #ifdef COSMIC_RAY_SUBGRID_LEBRON
                 if(ptype==0 && r>0 && cr_injection>0 && All.Time>All.TimeBegin)
                 {
@@ -2762,15 +2703,7 @@ int force_treeevaluate(int target, int mode, int *exportflag, int *exportnodecou
 #ifdef RT_USE_TREECOL_FOR_NH
         int k; for(k=0; k < RT_USE_TREECOL_FOR_NH; k++) P[target].ColumnDensityBins[k] = treecol_angular_bins[k];
 #endif
-#ifdef TREE_RAD
-        if(P[target].Type == 0) {int kp; for(kp=0; kp<NPIX; kp++) CellP[target].Projection[kp] = treecol_Projection[kp];}
-#ifdef TREE_RAD_H2
-        if(P[target].Type == 0) {int kp; for(kp=0; kp<NPIX; kp++) {CellP[target].ProjectionH2[kp] = treecol_ProjectionH2[kp]; CellP[target].ProjectionCO[kp] = treecol_ProjectionCO[kp];}}
-#endif
-#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-        if(P[target].Type == 0) {int kp; for(kp=0; kp<NPIX; kp++) {CellP[target].UV_flux[kp] = treecol_UV_flux[kp]; CellP[target].LW_flux[kp] = treecol_LW_flux[kp]; CellP[target].NUV_flux[kp] = treecol_NUV_flux[kp]; CellP[target].OPT_flux[kp] = treecol_OPT_flux[kp];}}
-#endif
-#endif
+    /* TREE_RAD/G0_VARIABLE result writing moved to treecol.cc */
 #ifdef COUNT_MASS_IN_GRAVTREE
         P[target].TreeMass = tree_mass;
 #endif
@@ -2856,15 +2789,7 @@ int force_treeevaluate(int target, int mode, int *exportflag, int *exportnodecou
 #ifdef RT_USE_TREECOL_FOR_NH
         {int k; for(k=0;k<RT_USE_TREECOL_FOR_NH;k++) GravDataResult[target].ColumnDensityBins[k] = treecol_angular_bins[k];}
 #endif
-#ifdef TREE_RAD
-        {int kp; for(kp=0; kp<NPIX; kp++) GravDataResult[target].Projection[kp] = treecol_Projection[kp];}
-#ifdef TREE_RAD_H2
-        {int kp; for(kp=0; kp<NPIX; kp++) {GravDataResult[target].ProjectionH2[kp] = treecol_ProjectionH2[kp]; GravDataResult[target].ProjectionCO[kp] = treecol_ProjectionCO[kp];}}
-#endif
-#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-        {int kp; for(kp=0; kp<NPIX; kp++) {GravDataResult[target].UV_flux[kp] = treecol_UV_flux[kp]; GravDataResult[target].LW_flux[kp] = treecol_LW_flux[kp]; GravDataResult[target].NUV_flux[kp] = treecol_NUV_flux[kp]; GravDataResult[target].OPT_flux[kp] = treecol_OPT_flux[kp];}}
-#endif
-#endif
+    /* TREE_RAD/G0_VARIABLE result writing for mode==1 moved to treecol.cc */
 #ifdef RT_OTVET
         {int k,k_et; for(k=0;k<N_RT_FREQ_BINS;k++) for(k_et=0;k_et<6;k_et++) {GravDataResult[target].ET[k][k_et] = RT_ET[k][k_et];}}
 #endif
