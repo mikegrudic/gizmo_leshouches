@@ -48,6 +48,9 @@ int does_particle_need_to_be_merged(int i)
 #ifdef GALSF_MERGER_STARCLUSTER_PARTICLES
     if(P[i].Type==4) {return evaluate_starstar_merger_for_starcluster_eligibility(i);}
 #endif
+#ifdef GALSF_RESOLVEDISM_SAMPLE_IMF
+    if(P[i].Type==4 && P[i].sampled) {return 0;} /* IMF-sampled stars are individual physical stars, not undersized resolution elements — never merge */
+#endif
 #if defined(FIRE_SUPERLAGRANGIAN_JEANS_REFINEMENT) || defined(SINGLE_STAR_AND_SSP_NUCLEAR_ZOOM)
     if(P[i].Type>0) {return 0;} // don't allow merging of collisionless particles [only splitting, in these runs]
     if(is_particle_a_special_zoom_target(i)) {return 0;}
