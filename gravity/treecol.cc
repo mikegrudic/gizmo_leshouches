@@ -32,9 +32,9 @@
 
 #ifdef TREE_RAD
 
-/* Opening angle threshold: angular size of one HEALPix pixel.
- * Nodes subtending less than this don't need opening for column accuracy. */
-#define TREECOL_OPENING_ANGLE2 (4.0*M_PI/NPIX) /* square of opening angle */
+/* Opening angle threshold: match gravity tree (ErrTolTheta=0.5 → θ²=0.25)
+ * so column density resolution is consistent with force resolution. */
+#define TREECOL_OPENING_ANGLE2 (All.ErrTolTheta * All.ErrTolTheta)
 
 /* MPI tags for treecol communication */
 #define TAG_TREECOL_A 600
@@ -378,6 +378,7 @@ static void *treecol_primary_loop(void *p)
     exportindex = Exportindex + threadid * NTask;
     for(j = 0; j < NTask; j++) exportflag[j] = -1;
 
+    long n_evaluated = 0, n_skipped_type = 0, n_skipped_timebin = 0;
     while(1)
     {
 #ifdef _OPENMP
@@ -389,11 +390,16 @@ static void *treecol_primary_loop(void *p)
         }
         if(i >= NumPart) break;
 
-        if(P[i].Type != 0) { ProcessedFlag[i] = 1; continue; } /* only gas needs columns */
-        if(!TimeBinActive[P[i].TimeBin]) { ProcessedFlag[i] = 1; continue; }
+        if(P[i].Type != 0) { ProcessedFlag[i] = 1; n_skipped_type++; continue; } /* only gas needs columns */
+        if(!TimeBinActive[P[i].TimeBin]) { ProcessedFlag[i] = 1; n_skipped_timebin++; continue; }
 
+        n_evaluated++;
         if(treecol_evaluate(i, 0, exportflag, exportnodecount, exportindex) < 0) break;
         ProcessedFlag[i] = 1;
+    }
+    if(n_evaluated > 0 || n_skipped_type > 0 || n_skipped_timebin > 0) {
+        printf("TREECOL DEBUG [task %d thread %d]: evaluated=%ld skipped_type=%ld skipped_timebin=%ld NumPart=%d\n",
+               ThisTask, *(int*)p, n_evaluated, n_skipped_type, n_skipped_timebin, NumPart);
     }
     return NULL;
 }
@@ -567,6 +573,52 @@ void treecol_tree(void)
 
     myfree(DataNodeList);
     myfree(DataIndexTable);
+
+    /* debug: check how many cells got nonzero columns and fluxes */
+    {
+        long n_nonzero_col = 0, n_nonzero_uv = 0, n_nonzero_lw = 0, n_gas_local = 0;
+        double col_max_local = 0, uv_max_local = 0, lw_max_local = 0, nuv_max_local = 0, opt_max_local = 0;
+        for(i = 0; i < NumPart; i++) {
+            if(P[i].Type == 0) {
+                n_gas_local++;
+                int kp; double col_sum = 0, uv_sum = 0, lw_sum = 0, nuv_sum = 0, opt_sum = 0;
+                for(kp = 0; kp < NPIX; kp++) {
+                    col_sum += CellP[i].Projection[kp];
+#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
+                    uv_sum += CellP[i].UV_flux[kp];
+                    lw_sum += CellP[i].LW_flux[kp];
+                    nuv_sum += CellP[i].NUV_flux[kp];
+                    opt_sum += CellP[i].OPT_flux[kp];
+#endif
+                }
+                if(col_sum > 0) n_nonzero_col++;
+                if(uv_sum > 0) n_nonzero_uv++;
+                if(lw_sum > 0) n_nonzero_lw++;
+                if(col_sum > col_max_local) col_max_local = col_sum;
+                if(uv_sum > uv_max_local) uv_max_local = uv_sum;
+                if(lw_sum > lw_max_local) lw_max_local = lw_sum;
+                if(nuv_sum > nuv_max_local) nuv_max_local = nuv_sum;
+                if(opt_sum > opt_max_local) opt_max_local = opt_sum;
+            }
+        }
+        long n_col_tot = 0, n_uv_tot = 0, n_lw_tot = 0, n_gas_tot = 0;
+        double col_max_tot = 0, uv_max_tot = 0, lw_max_tot = 0, nuv_max_tot = 0, opt_max_tot = 0;
+        MPI_Reduce(&n_nonzero_col, &n_col_tot, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&n_nonzero_uv, &n_uv_tot, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&n_nonzero_lw, &n_lw_tot, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&n_gas_local, &n_gas_tot, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&col_max_local, &col_max_tot, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&uv_max_local, &uv_max_tot, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&lw_max_local, &lw_max_tot, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&nuv_max_local, &nuv_max_tot, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&opt_max_local, &opt_max_tot, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        if(ThisTask == 0) {
+            printf("TREECOL: col nonzero=%ld/%ld (%.1f%%), max=%.4e\n",
+                   n_col_tot, n_gas_tot, 100.0*n_col_tot/DMAX(n_gas_tot,1), col_max_tot);
+            printf("TREECOL: UV nonzero=%ld, max=%.4e | LW nonzero=%ld, max=%.4e | NUV max=%.4e | OPT max=%.4e\n",
+                   n_uv_tot, uv_max_tot, n_lw_tot, lw_max_tot, nuv_max_tot, opt_max_tot);
+        }
+    }
 
     tend = my_second();
     if(ThisTask == 0) { printf("TREECOL: Done (%d iterations, %.3g sec)\n", iter, timediff(tstart, tend)); }
