@@ -305,7 +305,7 @@ c
          nray_start = 0
 
          do I = nray_start, nray_end
-#ifdef G0_VARIABLE
+#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
            fac_uv_pix = fac_uv(I)
 #else
            fac_uv_pix = 1d0 / nray
@@ -321,7 +321,7 @@ c
 c
 c NUV/OPT shielding (same structure, band-appropriate cross-sections)
 c
-#ifdef G0_VARIABLE
+#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
             fac_nuv_pix = fac_nuv(I)
             fac_opt_pix = fac_opt(I)
 #else
@@ -358,6 +358,20 @@ c
          enddo
 #endif /* RAYTRACE or TREE_RAD */
       endif
+c
+c When M1 radiation transport is active, dust attenuation is already
+c handled by the RT solver. Override all dust shielding factors to unity
+c so only molecular self-shielding (H2, CO) from TREE_RAD remains.
+c
+#ifdef RADTRANSFER
+      f_dust   = 1d0
+      chi_isrf = 1d0
+      chi_NUV  = 1d0
+      chi_OPT  = 1d0
+      f_simp   = 1d0
+      df25     = 1d0
+      df30     = 1d0
+#endif
 c
 c CO self-shielding, shielding by H2.
 c
@@ -409,7 +423,7 @@ c
         theta_CO   = 0d0
         theta_H2   = 0d0
         do I = nray_start, nray_end
-#ifdef G0_VARIABLE
+#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
           fac_uv_pix = fac_uv(I)
 #else
           fac_uv_pix = 1d0 / nray
@@ -476,7 +490,7 @@ c
 c H2: use Lyman-Werner band (11.2-13.6 eV) specifically for H2 photodissociation
 #if CHEMISTRYNETWORK != 1
 c Network 1 doesn't use CPHOTO stuff
-      phrates(1) = phtab(1) * G0_LW * f_dust
+      phrates(1) = phtab(1) * G0_LW * fshield * f_dust
 #else
       phrates(1) = phtab(1) * G0_LW * fshield * f_dust
 #endif
@@ -768,7 +782,7 @@ c
 #endif
 #ifdef TREE_RAD_H2
         do I = 0, NPIX-1
-#ifdef G0_VARIABLE
+#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
           fac_uv_pix = fac_uv(I)
 #else
           fac_uv_pix = 1d0 / nray
@@ -838,7 +852,7 @@ c
       elseif (iphoto .eq. 6) then
 #ifdef TREE_RAD_H2
         do I = 0, NPIX-1
-#ifdef G0_VARIABLE
+#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
           fac_uv_pix = fac_uv(I)
 #else
           fac_uv_pix = 1d0 / NPIX
