@@ -89,9 +89,7 @@ static int treecol_evaluate(int target, int mode, int *exportflag, int *exportno
     double treecol_NUV_flux[NPIX] = {0}, treecol_OPT_flux[NPIX] = {0};
     double uv_lum = 0, lw_lum = 0, nuv_lum = 0, opt_lum = 0;
 #endif
-#ifdef GRAVTREE_CALCULATE_GAS_MASS_IN_NODE
     double gasmass = 0;
-#endif
 
     double shielding_length = All.ShieldingLength / All.cf_atime; /* comoving */
     double shielding_length2 = shielding_length * shielding_length;
@@ -136,10 +134,8 @@ static int treecol_evaluate(int target, int mode, int *exportflag, int *exportno
                 GRAVITY_NEAREST_XYZ(dx, dy, dz, -1);
                 r2 = dx*dx + dy*dy + dz*dz;
 
-#ifdef GRAVTREE_CALCULATE_GAS_MASS_IN_NODE
                 gasmass = 0;
                 if(P[no].Type == 0) { gasmass = P[no].Mass; }
-#endif
 #ifdef TREE_RAD_H2
                 h2mass = 0; comass = 0;
                 if(P[no].Type == 0) {
@@ -160,7 +156,6 @@ static int treecol_evaluate(int target, int mode, int *exportflag, int *exportno
                 if(r2 > 0) {
                     r = sqrt(r2);
                     /* column densities: gas within shielding length */
-#ifdef GRAVTREE_CALCULATE_GAS_MASS_IN_NODE
                     if(gasmass > 0 && r < shielding_length) {
                         long iheal;
                         double vec_hp[3] = {dx, dy, dz};
@@ -172,7 +167,6 @@ static int treecol_evaluate(int target, int mode, int *exportflag, int *exportno
                         treecol_ProjectionCO[iheal] += comass / area;
 #endif
                     }
-#endif
                     /* radiation fluxes: no distance cutoff (1/r² falloff is natural) */
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
                     if(uv_lum > 0 || lw_lum > 0 || nuv_lum > 0 || opt_lum > 0) {
@@ -282,9 +276,7 @@ static int treecol_evaluate(int target, int mode, int *exportflag, int *exportno
                 }
 
                 /* use this node as-is */
-#ifdef GRAVTREE_CALCULATE_GAS_MASS_IN_NODE
                 gasmass = nop->gasmass;
-#endif
 #ifdef TREE_RAD_H2
                 h2mass = nop->h2mass;
                 comass = nop->comass;
@@ -298,7 +290,6 @@ static int treecol_evaluate(int target, int mode, int *exportflag, int *exportno
 
                 if(r2 > 0) {
                     r = sqrt(r2);
-#ifdef GRAVTREE_CALCULATE_GAS_MASS_IN_NODE
                     if(gasmass > 0 && r < shielding_length) {
                         long iheal;
                         double vec_hp[3] = {dx, dy, dz};
@@ -310,7 +301,6 @@ static int treecol_evaluate(int target, int mode, int *exportflag, int *exportno
                         treecol_ProjectionCO[iheal] += comass / area;
 #endif
                     }
-#endif
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
                     if(uv_lum > 0 || lw_lum > 0 || nuv_lum > 0 || opt_lum > 0) {
                         long iheal;
