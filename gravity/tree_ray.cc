@@ -959,6 +959,113 @@ void tree_ray_tree(void)
         }
     }
 
+    /* ---- Post-hoc photon conservation (LEBRON-style) ----
+     * For each band: if total absorbed power > total emitted power,
+     * rescale all fluxes down to enforce conservation. Prevents photon
+     * creation from tree monopole / pixel discretization errors. */
+    {
+        double L_emit_uv_local = 0, L_emit_lw_local = 0, L_emit_nuv_local = 0, L_emit_opt_local = 0;
+        double L_abs_uv_local = 0, L_abs_lw_local = 0, L_abs_nuv_local = 0, L_abs_opt_local = 0;
+
+        /* Sum emitted luminosity from local stars */
+        for(i = 0; i < NumPart; i++) {
+            if(P[i].Type == 4 || P[i].Type == 5) {
+                L_emit_uv_local  += P[i].UV_luminosity;
+                L_emit_lw_local  += P[i].LW_luminosity;
+                L_emit_nuv_local += P[i].NUV_luminosity;
+                L_emit_opt_local += P[i].OPT_luminosity;
+            }
+        }
+
+        /* Sum absorbed power at each gas cell: P_abs = κ × (4πJ) × V
+         * where 4πJ = Σ_pix F_pix, κ = σ_dust × n_H × DGR, V = M/ρ
+         * Combined: P_abs = σ_dust_cgs × DGR × (Σ_pix F_pix) × M × HYDROGEN_MASSFRAC / m_H
+         *           (using n_H × V = M × X_H / m_H, with appropriate unit conversions) */
+        double DGR = All.DGRnormalized;
+        for(i = 0; i < NumPart; i++) {
+            if(P[i].Type == 0) {
+                double nH_V = HYDROGEN_MASSFRAC * P[i].Mass * UNIT_MASS_IN_CGS / PROTONMASS_CGS; /* n_H × V in CGS */
+                int kp; double fuv = 0, flw = 0, fnuv = 0, fopt = 0;
+                for(kp = 0; kp < NPIX; kp++) {
+                    fuv  += CellP[i].UV_flux[kp];
+                    flw  += CellP[i].LW_flux[kp];
+                    fnuv += CellP[i].NUV_flux[kp];
+                    fopt += CellP[i].OPT_flux[kp];
+                }
+                /* Flux is in code units [erg/s / code_length²]; convert to CGS */
+                double fac_flux = All.cf_a2inv / (UNIT_LENGTH_IN_CGS * UNIT_LENGTH_IN_CGS);
+                L_abs_uv_local  += SIGMA_DUST_FUV * DGR * nH_V * fuv  * fac_flux;
+                L_abs_lw_local  += SIGMA_DUST_FUV * DGR * nH_V * flw  * fac_flux;  /* LW uses same dust σ as FUV */
+                L_abs_nuv_local += SIGMA_DUST_NUV * DGR * nH_V * fnuv * fac_flux;
+                L_abs_opt_local += SIGMA_DUST_OPT * DGR * nH_V * fopt * fac_flux;
+            }
+        }
+
+        /* MPI-reduce totals */
+        double L_emit_uv, L_emit_lw, L_emit_nuv, L_emit_opt;
+        double L_abs_uv, L_abs_lw, L_abs_nuv, L_abs_opt;
+        MPI_Allreduce(&L_emit_uv_local, &L_emit_uv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&L_emit_lw_local, &L_emit_lw, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&L_emit_nuv_local, &L_emit_nuv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&L_emit_opt_local, &L_emit_opt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&L_abs_uv_local, &L_abs_uv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&L_abs_lw_local, &L_abs_lw, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&L_abs_nuv_local, &L_abs_nuv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&L_abs_opt_local, &L_abs_opt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+        /* Compute correction factors (only renormalize DOWN, never up) */
+        double f_uv  = (L_abs_uv  > L_emit_uv  && L_abs_uv  > 0) ? L_emit_uv  / L_abs_uv  : 1.0;
+        double f_lw  = (L_abs_lw  > L_emit_lw  && L_abs_lw  > 0) ? L_emit_lw  / L_abs_lw  : 1.0;
+        double f_nuv = (L_abs_nuv > L_emit_nuv && L_abs_nuv > 0) ? L_emit_nuv / L_abs_nuv : 1.0;
+        double f_opt = (L_abs_opt > L_emit_opt && L_abs_opt > 0) ? L_emit_opt / L_abs_opt : 1.0;
+
+        /* Apply correction to all gas cells */
+        if(f_uv < 1.0 || f_lw < 1.0 || f_nuv < 1.0 || f_opt < 1.0) {
+            for(i = 0; i < NumPart; i++) {
+                if(P[i].Type == 0) {
+                    int kp;
+                    for(kp = 0; kp < NPIX; kp++) {
+                        CellP[i].UV_flux[kp]  *= f_uv;
+                        CellP[i].LW_flux[kp]  *= f_lw;
+                        CellP[i].NUV_flux[kp] *= f_nuv;
+                        CellP[i].OPT_flux[kp] *= f_opt;
+                    }
+                }
+            }
+            if(ThisTask == 0) {
+                printf("TREERAY CONSERV: f_uv=%.4f f_lw=%.4f f_nuv=%.4f f_opt=%.4f (L_abs/L_emit: %.3e/%.3e %.3e/%.3e %.3e/%.3e %.3e/%.3e)\n",
+                       f_uv, f_lw, f_nuv, f_opt, L_abs_uv, L_emit_uv, L_abs_lw, L_emit_lw, L_abs_nuv, L_emit_nuv, L_abs_opt, L_emit_opt);
+            }
+        }
+
+#ifdef TREE_RAY_PI
+        /* Same for ionizing band */
+        double L_emit_ion_local = 0, L_abs_ion_local = 0;
+        for(i = 0; i < NumPart; i++) {
+            if(P[i].Type == 4 || P[i].Type == 5) L_emit_ion_local += P[i].Ion_luminosity;
+        }
+        for(i = 0; i < NumPart; i++) {
+            if(P[i].Type == 0) {
+                double nHI_V = (1.0 - CellP[i].TracAbund[IHP]) * HYDROGEN_MASSFRAC * P[i].Mass * UNIT_MASS_IN_CGS / PROTONMASS_CGS;
+                int kp; double fion = 0;
+                for(kp = 0; kp < NPIX; kp++) fion += CellP[i].Ion_flux[kp];
+                double fac_flux = All.cf_a2inv / (UNIT_LENGTH_IN_CGS * UNIT_LENGTH_IN_CGS);
+                L_abs_ion_local += SIGMA_ION_HI * nHI_V * fion * fac_flux;
+            }
+        }
+        double L_emit_ion, L_abs_ion;
+        MPI_Allreduce(&L_emit_ion_local, &L_emit_ion, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&L_abs_ion_local, &L_abs_ion, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        double f_ion = (L_abs_ion > L_emit_ion && L_abs_ion > 0) ? L_emit_ion / L_abs_ion : 1.0;
+        if(f_ion < 1.0) {
+            for(i = 0; i < NumPart; i++) {
+                if(P[i].Type == 0) { int kp; for(kp = 0; kp < NPIX; kp++) CellP[i].Ion_flux[kp] *= f_ion; }
+            }
+            if(ThisTask == 0) printf("TREERAY CONSERV: f_ion=%.4f (L_abs/L_emit: %.3e/%.3e)\n", f_ion, L_abs_ion, L_emit_ion);
+        }
+#endif
+    }
+
     /* Free per-thread buffers (LIFO order) */
     for(i = nthreads_alloc - 1; i >= 0; i--)
         myfree(thread_ibuf[i]);
