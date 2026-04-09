@@ -111,6 +111,12 @@ extern ALIGN(32) struct particle_data
     MyFloat Lyman_photons_per_sec;        /*!< ionizing photon rate [sec^-1] */
 #endif
 #endif
+#ifdef TREE_RAY_IR
+    MyFloat IR_luminosity;                /*!< dust IR emission [erg/s], computed from Tdust each cooling step */
+#endif
+#ifdef TREE_RAY_PI
+    MyFloat Ion_luminosity;               /*!< ionizing luminosity [erg/s], >13.6 eV, from stellar tables */
+#endif
 #ifdef GALSF_RESOLVEDISM_SAMPLE_IMF
     int sampled;                          /*!< flag: 1 if IMF has been sampled for this star */
     MyFloat MstarSampleIMF[N_STELLAR_MASS]; /*!< individual stellar masses from IMF sampling */

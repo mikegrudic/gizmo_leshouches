@@ -246,6 +246,12 @@ extern struct gas_cell_data
     MyFloat LW_flux[NPIX];               /*!< HEALPix LW flux per pixel from stars, 11.2-13.6 eV */
     MyFloat NUV_flux[NPIX];              /*!< HEALPix NUV flux per pixel from stars, ~3.4-6 eV */
     MyFloat OPT_flux[NPIX];              /*!< HEALPix optical+NIR flux per pixel, ~0.4-3.4 eV */
+#ifdef TREE_RAY_IR
+    MyFloat IR_flux[NPIX];               /*!< HEALPix IR flux per pixel from dust emission, attenuated [erg cm^-2 s^-1] */
+#endif
+#ifdef TREE_RAY_PI
+    MyFloat Ion_flux[NPIX];              /*!< HEALPix ionizing flux per pixel, attenuated by neutral H [erg cm^-2 s^-1] */
+#endif
     MyFloat G0;                           /*!< FUV radiation field in Habing units (from tree walk) */
     MyFloat G0_LW;                        /*!< LW radiation field in Habing units (from tree walk) */
     MyFloat CR_ionization_rate;           /*!< cosmic ray ionization rate [s^-1] */

@@ -48,8 +48,11 @@ void compute_grav_accelerations(void)
   /* For the first timestep, we redo it to allow usage of relative opening criterion for consistent accuracy */
   if(All.TypeOfOpeningCriterion == 1 && All.Ti_Current == 0) {gravity_tree();}
 
-#ifdef TREE_RAD
-  treecol_tree();  /* separate lightweight walk for column densities (N_H, N_H2, N_CO) and radiation fluxes (UV, LW, NUV, OPT) */
+#if defined(TREE_RAD) && !defined(TREE_RAY)
+  treecol_tree();  /* separate lightweight walk for column densities + unattenuated fluxes */
+#endif
+#ifdef TREE_RAY
+  tree_ray_tree();  /* TREERAY: progressive dust+H2 attenuation during tree walk (replaces treecol) */
 #endif
 
   PRINT_STATUS(" ..gravity force computation done");

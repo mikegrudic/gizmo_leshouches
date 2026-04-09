@@ -488,6 +488,13 @@ void force_update_node_recursive(int no, int sib, int father)
         MyFloat nuv_luminosity = 0;
         MyFloat opt_luminosity = 0;
 #endif
+#ifdef TREE_RAY_IR
+        MyFloat ir_luminosity = 0;
+#endif
+#ifdef TREE_RAY_PI
+        MyFloat ion_luminosity = 0;
+        MyFloat neutral_h_mass = 0;
+#endif
 #ifdef COSMIC_RAY_SUBGRID_LEBRON
         cr_injection = 0;
 #endif
@@ -579,6 +586,13 @@ void force_update_node_recursive(int no, int sib, int father)
                         lw_luminosity += Nodes[p].lw_luminosity;
                         nuv_luminosity += Nodes[p].nuv_luminosity;
                         opt_luminosity += Nodes[p].opt_luminosity;
+#endif
+#ifdef TREE_RAY_IR
+                        ir_luminosity += Nodes[p].ir_luminosity;
+#endif
+#ifdef TREE_RAY_PI
+                        ion_luminosity += Nodes[p].ion_luminosity;
+                        neutral_h_mass += Nodes[p].neutral_h_mass;
 #endif
 #ifdef COSMIC_RAY_SUBGRID_LEBRON
                         cr_injection += Nodes[p].cr_injection;
@@ -679,6 +693,13 @@ void force_update_node_recursive(int no, int sib, int father)
 #endif
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
                     if(pa->Type == 4 || pa->Type == 5) {uv_luminosity += P[p].UV_luminosity; lw_luminosity += P[p].LW_luminosity; nuv_luminosity += P[p].NUV_luminosity; opt_luminosity += P[p].OPT_luminosity;}
+#endif
+#ifdef TREE_RAY_IR
+                    if(pa->Type == 0) {ir_luminosity += P[p].IR_luminosity;}
+#endif
+#ifdef TREE_RAY_PI
+                    if(pa->Type == 4 || pa->Type == 5) {ion_luminosity += P[p].Ion_luminosity;}
+                    if(pa->Type == 0) {neutral_h_mass += (1.0 - CellP[p].TracAbund[IHP]) * HYDROGEN_MASSFRAC * pa->Mass;}
 #endif
 #ifdef COSMIC_RAY_SUBGRID_LEBRON
                     cr_injection += cr_get_source_injection_rate(p);
@@ -881,6 +902,13 @@ void force_update_node_recursive(int no, int sib, int father)
         Nodes[no].lw_luminosity = lw_luminosity;
         Nodes[no].nuv_luminosity = nuv_luminosity;
         Nodes[no].opt_luminosity = opt_luminosity;
+#endif
+#ifdef TREE_RAY_IR
+        Nodes[no].ir_luminosity = ir_luminosity;
+#endif
+#ifdef TREE_RAY_PI
+        Nodes[no].ion_luminosity = ion_luminosity;
+        Nodes[no].neutral_h_mass = neutral_h_mass;
 #endif
 #ifdef COSMIC_RAY_SUBGRID_LEBRON
         Nodes[no].cr_injection = cr_injection;

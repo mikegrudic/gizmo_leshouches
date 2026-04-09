@@ -304,6 +304,28 @@ c
          nray_end = NPIX-1
          nray_start = 0
 
+#ifdef TREE_RAY
+c     TREERAY: fluxes already dust+H2 attenuated during tree walk.
+c     Set dust transmission to unity. Only chi_isrf needed (PE heating shape).
+         f_dust  = 1d0
+         chi_NUV = 1d0
+         chi_OPT = 1d0
+         f_simp  = 1d0
+         df25    = 1d0
+         df30    = 1d0
+         do I = nray_start, nray_end
+#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
+           fac_uv_pix = fac_uv(I)
+#else
+           fac_uv_pix = 1d0 / nray
+#endif
+           AV     = AV_ext + AV_conversion_factor
+     $            * dust_to_gas_ratio * column_density_projection(I)
+           AV = AV + AVlocal
+           chi_isrf = chi_isrf + fac_uv_pix * chi(AV)
+         enddo
+#else
+c     TREE_RAD / RAYTRACE: post-hoc dust attenuation of fluxes
          do I = nray_start, nray_end
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
            fac_uv_pix = fac_uv(I)
@@ -311,10 +333,10 @@ c
            fac_uv_pix = 1d0 / nray
 #endif
            NH_ext = AV_ext / AV_conversion_factor
-            f_dust = f_dust + fac_uv_pix * 
-     $               dexp(-sigma_dust * (column_density_projection(I) 
+            f_dust = f_dust + fac_uv_pix *
+     $               dexp(-sigma_dust * (column_density_projection(I)
      $             + NH_ext))
-            AV     = AV_ext + AV_conversion_factor 
+            AV     = AV_ext + AV_conversion_factor
      $             * dust_to_gas_ratio * column_density_projection(I)
             AV = AV + AVlocal
             chi_isrf = chi_isrf + fac_uv_pix * chi(AV)
@@ -356,6 +378,7 @@ c
             df30 = df30 + fac_uv_pix * exp(-3.0d0 * AV)
 
          enddo
+#endif /* TREE_RAY */
 #endif /* RAYTRACE or TREE_RAD */
       endif
 c

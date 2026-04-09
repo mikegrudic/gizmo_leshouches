@@ -843,6 +843,9 @@ void gravity_tree(void);
 #ifdef TREE_RAD
 void treecol_tree(void);
 #endif
+#ifdef TREE_RAY
+void tree_ray_tree(void);
+#endif
 void hydro_force(void);
 void init(void);
 void do_the_cooling_for_particle(int i);

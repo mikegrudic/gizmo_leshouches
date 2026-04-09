@@ -366,6 +366,7 @@ GRAVITY_OBJS  = gravity/forcetree.o \
                 gravity/forcetree_update.o \
                 gravity/gravtree.o \
                 gravity/treecol.o \
+                gravity/tree_ray.o \
 				gravity/cosmology.o \
 				gravity/potential.o \
 				gravity/pm_periodic.o \
