@@ -18,7 +18,7 @@ extern "C" {
                crtab[NCRTAB], crphot[NCRPHOT],
                phtab[NPHTAB], cst[NCONST], dtlog, tdust, tmax, tmin,
                deff, abundc, abundo, abundsi, abundD,
-               abundM, abundN, G0, G0_LW, G0_dust, G0_NUV, G0_OPT,
+               abundM, abundN, G0, G0_LW, G0_dust,
                f_rsc, phi_pah,
                dust_to_gas_ratio, AV_conversion_factor,
                cosmic_ray_ion_rate, redshift, AV_ext,
@@ -37,7 +37,7 @@ extern "C" {
                dm_density,
                rt_phot_HI, rt_phot_HeI, rt_phot_HeII,
                rt_heat_HI, rt_heat_HeI, rt_heat_HeII,
-               chi_NUV, chi_OPT;
+               cr_energy_density;
     } COOLR;
 
     extern struct {
@@ -48,13 +48,19 @@ extern "C" {
             isrf_option;
     } COOLI;
 
+    /* Mirrors Fortran common /chem_comp/ in cool.h. Defaults initialized
+     * in coolinmo from ABHE macro. With GALSF_CHEMCOOL_VARIABLE_XH_AND_ABHE,
+     * overwritten per-particle below before each EVOLVE_ABUNDANCES call. */
+    extern struct {
+        double abhe;
+        double X_H_chem;
+    } CHEM_COMP;
+
 #if defined(TREE_RAD) || defined(TREE_RAD_H2)
     extern struct {
         double diffuse_dust_heat;
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
         double fac_uv[NPIX];
-        double fac_nuv[NPIX];
-        double fac_opt[NPIX];
 #endif
         double column_density_projection[NPIX];
         double column_density_projection_h2[NPIX];
@@ -110,6 +116,7 @@ void chemcool_init(void)
     COOLR.G0          = All.G0;
     COOLR.G0_LW       = All.G0;
     COOLR.cosmic_ray_ion_rate = All.CosmicRayIonRate;
+    COOLR.cr_energy_density = 0.0;  /* [erg/cm^3], overwritten per-cell if COSMIC_RAY_FLUID active */
     COOLR.dust_to_gas_ratio = All.DGRnormalized;
 
     COOLINMO();
@@ -229,34 +236,29 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
 #endif
 
 
-    COOLR.G0_NUV = 0;
-    COOLR.G0_OPT = 0;
 
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-    double u_Habing = 5.29e-14; /* Habing field, in erg cm^-3 */
-    double fac_flux2habing = All.cf_a2inv / (4.*M_PI*C_LIGHT_CGS * pow(UNIT_LENGTH_IN_CGS, 2)) / u_Habing; /* cf_a2inv converts comoving r^2 from treecol to physical r^2 */
+    /* Habing/ISRF energy densities [erg/cm^3] (Draine 1978, Mathis+ 1983).
+       FUV (6-13.6 eV):  5.29e-14  (Habing 1968, used for tree-ray PE heating)
+       LW  (11.2-13.6):  2.11e-14  (H2 photodissociation band, from Draine spectrum)
+       NUV and OPT: computed on tree but not used for heating currently. */
+    double u_Hab_FUV = 5.29e-14;
+    double u_Hab_LW  = 2.11e-14;
+    double fac_flux2energy = All.cf_a2inv / (4.*M_PI*C_LIGHT_CGS * pow(UNIT_LENGTH_IN_CGS, 2)); /* luminosity flux to energy density */
 
     double UV_flux_tot = 0.0;
     double LW_flux_tot = 0.0;
-    double NUV_flux_tot = 0.0;
-    double OPT_flux_tot = 0.0;
-    double UV_flux_min_pix = 0.324e-2/NPIX / fac_flux2habing;
-    double LW_flux_min_pix = 0.1 * UV_flux_min_pix; /* LW floor ~ 10% of FUV floor (typical stellar spectrum) */
+    double UV_flux_min_pix = 0.324e-2/NPIX / (fac_flux2energy / u_Hab_FUV);
+    double LW_flux_min_pix = 0.1 * UV_flux_min_pix;
     for(i = 0; i < NPIX; i++) {
         CellP[target].UV_flux[i] = DMAX(CellP[target].UV_flux[i], UV_flux_min_pix);
         CellP[target].LW_flux[i] = DMAX(CellP[target].LW_flux[i], LW_flux_min_pix);
         UV_flux_tot += CellP[target].UV_flux[i];
         LW_flux_tot += CellP[target].LW_flux[i];
-        NUV_flux_tot += CellP[target].NUV_flux[i];
-        OPT_flux_tot += CellP[target].OPT_flux[i];
     }
 
-    double G0_tot = UV_flux_tot * fac_flux2habing * All.G0;
-    /* Lyman-Werner G0 for H2 photodissociation (11.2-13.6 eV only) */
-    double G0_LW = LW_flux_tot * fac_flux2habing * All.G0;
-    /* Per-band unshielded contributions (shielding applied in calc_photo via chi_isrf/chi_NUV/chi_OPT) */
-    double G0_NUV_val = NUV_flux_tot * fac_flux2habing * All.G0;
-    double G0_OPT_val = OPT_flux_tot * fac_flux2habing * All.G0;
+    double G0_tot = UV_flux_tot * fac_flux2energy / u_Hab_FUV * All.G0;
+    double G0_LW  = LW_flux_tot * fac_flux2energy / u_Hab_LW  * All.G0;
 
     /* For cosmological runs: add metagalactic FUV background floor from TREECOOL */
     if(All.ComovingIntegrationOn) {
@@ -271,9 +273,6 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
     CellP[target].G0 = G0_tot;
     COOLR.G0_LW = G0_LW;
     CellP[target].G0_LW = G0_LW;
-    COOLR.G0_NUV = G0_NUV_val;
-    COOLR.G0_OPT = G0_OPT_val;
-    /* G0_dust: FUV part only; NUV/OPT shielded separately in calc_dust_temp */
     COOLR.G0_dust = G0_tot;
 
 #ifdef COSMIC_RAY_FLUID
@@ -281,6 +280,7 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
         double ecr_cgs = Get_CosmicRayEnergyDensity_cgs(target); /* [erg cm^-3] */
         double ecr_eVcm3 = ecr_cgs / 1.602e-12; /* convert to [eV cm^-3] */
         COOLR.cosmic_ray_ion_rate = 3e-17 * ecr_eVcm3;
+        COOLR.cr_energy_density = ecr_cgs; /* [erg cm^-3], for hadronic+Coulomb heating in cool_func */
     }
 #elif defined(CR_SCALE_WITH_G0)
     COOLR.cosmic_ray_ion_rate = DMAX(1e-21, DMIN(2e-16, (COOLR.G0 / 1.7) * All.CosmicRayIonRate));
@@ -306,12 +306,14 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
 #if defined(RADTRANSFER)
     { /* M1 RT active: compute G0, G0_LW, and photoionization rates from radiation field */
         double rho_code = CellP[target].Density * All.cf_a3inv;
-        double u_Habing_cgs = HABING_FLUX_CGS / C_LIGHT_CGS; /* 5.33e-14 erg/cm^3 */
+        /* Habing normalizations for M1 RT bands [erg/cm^3].
+           FUV = 8-13.6 eV (narrower than tree-ray 6-13.6), LW = 11.2-13.6 eV */
+        double u_Hab_FUV_M1 = 5.03e-14, u_Hab_LW = 2.11e-14;
 
         /* Convert Rad_E_gamma (extensive: total energy per particle) to physical energy density (erg/cm^3):
            u_rad = Rad_E_gamma / V_i = Rad_E_gamma * Density / Mass  [code energy/volume]
            u_rad_cgs = u_rad * UNIT_PRESSURE_IN_CGS */
-        double fac_to_cgs = (rho_code / P[target].Mass) * UNIT_PRESSURE_IN_CGS; /* converts Rad_E_gamma to erg/cm^3 */
+        double fac_to_cgs = (rho_code / P[target].Mass) * UNIT_PRESSURE_IN_CGS;
 
 #if defined(RT_PHOTOELECTRIC)
         double u_PE_cgs  = CellP[target].Rad_E_gamma[RT_FREQ_BIN_PHOTOELECTRIC] * fac_to_cgs;
@@ -323,19 +325,11 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
 #else
         double u_LW_cgs  = 0;
 #endif
-        /* G0 measures the 6-13.6 eV field in Habing units (PE + LW combined) */
-        COOLR.G0    = DMAX((u_PE_cgs + u_LW_cgs) / u_Habing_cgs, 1e-6);
-        COOLR.G0_LW = DMAX(u_LW_cgs / u_Habing_cgs, 0.0);
-
-        /* G0_dust: total radiation field for dust heating (includes NUV + optical/NIR) */
-        double u_NUV_cgs = 0, u_OPT_cgs = 0;
-#if defined(RT_NUV)
-        u_NUV_cgs = CellP[target].Rad_E_gamma[RT_FREQ_BIN_NUV] * fac_to_cgs;
-#endif
-#if defined(RT_OPTICAL_NIR)
-        u_OPT_cgs = CellP[target].Rad_E_gamma[RT_FREQ_BIN_OPTICAL_NIR] * fac_to_cgs;
-#endif
-        COOLR.G0_dust = DMAX((u_PE_cgs + u_LW_cgs + u_NUV_cgs + u_OPT_cgs) / u_Habing_cgs, 1e-6);
+        /* G0: FUV field (8-13.6 eV, already includes LW) in Habing units */
+        COOLR.G0    = DMAX(u_PE_cgs / u_Hab_FUV_M1, 1e-6);
+        /* G0_LW: LW field (11.2-13.6 eV) in its own Habing units */
+        COOLR.G0_LW = DMAX(u_LW_cgs / u_Hab_LW, 0.0);
+        COOLR.G0_dust = COOLR.G0;
 
 #if defined(RT_CHEM_PHOTOION)
         /* Compute per-band photoionization rates [s^-1] and heating rates [erg s^-1 per atom]
@@ -393,7 +387,13 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
     }
 
     /* Set correct dust temperature in coolr common block */
+#if defined(RT_INFRARED)
+    /* M1 solver owns the dust temperature — feed it into CHEMCOOL so gas-dust
+       coupling (R1) and H2 formation on dust use the transported value */
+    COOLR.tdust = CellP[target].Dust_Temperature;
+#else
     COOLR.tdust = CellP[target].DustTemp;
+#endif
 
     /* 'energy' is internal energy density, NOT specific internal energy [in code units] */
     energy = rho * CellP[target].InternalEnergy;
@@ -410,7 +410,17 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
     for(i = 0; i < TRAC_NUM; i++) {
         abundances[i] = CellP[target].TracAbund[i];
     }
+#ifdef GALSF_CHEMCOOL_VARIABLE_XH_AND_ABHE
+    {
+        double X_H_local  = DMAX(P[target].ElementAbundance[ELEM_H],  1e-10);
+        double X_He_local = DMAX(P[target].ElementAbundance[ELEM_He], 0.0);
+        CHEM_COMP.X_H_chem = X_H_local;
+        CHEM_COMP.abhe     = X_He_local / (4.0 * X_H_local);
+        yn = rho * X_H_local / PROTONMASS_CGS; /* H nuclei density, exact w/ metals */
+    }
+#else
     yn = rho / ((1.0 + 4.0 * ABHE) * PROTONMASS_CGS); /* number density of hydrogen only */
+#endif
 
     rpar[0] = yn;
     rpar[1] = dl;
@@ -436,12 +446,14 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
 #ifdef TREE_RAD
     for(i = 0; i < NPIX; i++) {
         columni = CellP[target].Projection[i] * UNIT_DENSITY_IN_CGS * UNIT_LENGTH_IN_CGS * All.cf_a2inv;
+#ifdef GALSF_CHEMCOOL_VARIABLE_XH_AND_ABHE
+        NH = columni * CHEM_COMP.X_H_chem / PROTONMASS_CGS;
+#else
         NH = columni / ((1.0 + 4.0 * ABHE) * PROTONMASS_CGS);
+#endif
         PROJECT.column_density_projection[i] = NH;
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
         PROJECT.fac_uv[i] = CellP[target].UV_flux[i] / UV_flux_tot;
-        PROJECT.fac_nuv[i] = (NUV_flux_tot > 0) ? CellP[target].NUV_flux[i] / NUV_flux_tot : 1.0 / NPIX;
-        PROJECT.fac_opt[i] = (OPT_flux_tot > 0) ? CellP[target].OPT_flux[i] / OPT_flux_tot : 1.0 / NPIX;
 #endif
     }
 #endif
@@ -466,41 +478,6 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
 #endif
 #endif /* TREE_RAD_H2 */
 
-#ifdef TREE_RAY_IR
-    /* Convert received IR flux to a volumetric dust heating rate [erg/s/cm^3]
-     * for the TREE_RAY_IR hook in cool_util.F.
-     * Heating rate = κ_IR × ρ_dust × c × u_IR, where u_IR = (4π/c) × J_IR.
-     * Simplification: κ_IR × ρ_dust = σ_IR_ref × DGR × nH, and
-     * J_IR = (1/4π) × Σ_pix IR_flux[pix] × (NPIX / 4π).
-     * So: heating = σ_IR_ref × DGR × nH × Σ_pix IR_flux[pix] in CGS. */
-    {
-        double IR_flux_tot_cgs = 0;
-        double fac_flux_cgs = All.cf_a2inv / (UNIT_LENGTH_IN_CGS * UNIT_LENGTH_IN_CGS);
-        for(i = 0; i < NPIX; i++)
-            IR_flux_tot_cgs += CellP[target].IR_flux[i] * fac_flux_cgs;
-        double sigma_ir_abs = 8.27e-25 * All.DGRnormalized;
-        PROJECT.diffuse_dust_heat = sigma_ir_abs * yn * IR_flux_tot_cgs;
-    }
-#else
-    PROJECT.diffuse_dust_heat = 0;
-#endif
-
-#ifdef TREE_RAY_PI
-    /* Compute photoionization rate and heating from tree-transported ionizing flux.
-     * Same physics as M1 RT (chemcool.cc lines 344-350): Γ = σ × F_tot / <hν>.
-     * Values: σ_HI = 6.3e-18 cm², <hν> = 27.2 eV (same as rt_chem.cc). */
-    {
-        double fac_flux_cgs = All.cf_a2inv / (UNIT_LENGTH_IN_CGS * UNIT_LENGTH_IN_CGS);
-        double F_ion_tot_cgs = 0;
-        for(i = 0; i < NPIX; i++)
-            F_ion_tot_cgs += CellP[target].Ion_flux[i] * fac_flux_cgs;
-        double E_phot = 27.2 * 1.60218e-12;  /* 27.2 eV in erg */
-        double sigma_HI = 6.3e-18;           /* cm² */
-        double Gamma_HI = sigma_HI * F_ion_tot_cgs / E_phot;
-        COOLR.rt_phot_HI = Gamma_HI;                                  /* [s⁻¹] */
-        COOLR.rt_heat_HI = Gamma_HI * (27.2 - 13.6) * 1.60218e-12;   /* [erg/s per atom] */
-    }
-#endif
 
     /* Switch off chemistry for high-density particles */
     COOLI.no_chem = 0;
@@ -518,7 +495,6 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
     /* abe_HII = H+ + He+ + D+ + C+ ≈ 1 + abhe + abundD + abundc */
     double abe_HII = 1.0 + ABHE + COOLR.abundD + COOLR.abundc;
     double energy_HII = temp_HII * 1.5 * BOLTZMANN_CGS * yn * (1.0 + ABHE + abe_HII);
-#ifndef TREE_RAY_PI
     if(CellP[target].Ionized == 1) {
         skip_evolve_abundances = 1;
         abundances[IH2] = 0.0;
@@ -535,7 +511,6 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
 #endif
         if(energy < energy_HII) energy = energy_HII;
     }
-#endif /* TREE_RAY_PI */
 #endif
 
     /* Clamp molecular abundances to zero in fully ionized gas (xH+ > 0.99).
@@ -554,8 +529,20 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
     if(mode == 1 || mode == 2) timestep = 0.0;
 
     /* Evolve abundances */
-    if(skip_evolve_abundances == 0)
+    if(skip_evolve_abundances == 0) {
+        /* DEBUG: check if H+ is already >1 before entering the Fortran solver */
+        if(abundances[IHP] > 1.0) {
+            printf("CHEMCOOL_DEBUG: H+ > 1 ON ENTRY: ID=%llu H+=%.10e H2=%.10e CO=%.10e abundc=%.6e abundo=%.6e yn=%.4e\n",
+                (unsigned long long)P[target].ID, abundances[IHP], abundances[IH2],
+#if CHEMISTRYNETWORK == 5 || CHEMISTRYNETWORK == 6
+                abundances[ICO],
+#else
+                0.0,
+#endif
+                COOLR.abundc, COOLR.abundo, yn);
+        }
         EVOLVE_ABUNDANCES(&timestep, &dl, &yn, &divv, &energy, abundances, &column_est);
+    }
 
     /* Compute cooling rate */
     double cooling_rate = 0.;
@@ -595,6 +582,64 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
 #ifdef OUTPUT_COOLRATE
         CellP[target].CoolingRate_CHEMCOOL = cooling_rate;
 #endif
+
+#if defined(RADTRANSFER)
+        /* --- Distribute CHEMCOOL cooling rates into RT bins ---
+           Mirrors the standard cooling solver (cooling.cc ~lines 1295-1333).
+           COOLR.lambda[0..27] contains individual rates in erg/s/cm^3 (= nH^2 * Lambda).
+           Lambda_RadiativeCooling_toRHDBins uses the same nH^2-scaled convention. */
+        {
+            double nHcgs_loc = HYDROGEN_MASSFRAC * UNIT_DENSITY_IN_CGS * CellP[target].Density * All.cf_a3inv / PROTONMASS_CGS;
+            double nH2_loc = nHcgs_loc * nHcgs_loc;
+
+            /* Molecular + fine-structure → IR:
+               R2=H2, R4=H2O rot, R5=H2O vib, R6=H2O18 vib,
+               R7=CO rot, R8=CO vib, R9=13CO vib, R10=OH, R13=OI, R14=CI,
+               R15=SiI, R16=CII, R17=SiII, R18=Compton, R19=HD, R20=H2 CIE,
+               R21=13CO rot, R22=CO18 rot, R23=H2O18 rot, R24=CO18 vib
+               NOTE: R1 (gas-dust, index 0) excluded — rt_ir_lambdadust handles it.
+               NOTE: R11 (CR heating, index 10) and R12 (PE heating, index 11) excluded —
+               these are not radiative cooling, they are heating from CRs and the PE band. */
+            double Lambda_IR = 0;
+            int ir_idx[] = {1,3,4,5,6,7,8,9,12,13,14,15,16,17,18,19,20,21,22,23};
+            for(int j=0; j<20; j++) {Lambda_IR += COOLR.lambda[ir_idx[j]];}
+
+            /* Atomic/ionic excitation → NUV:
+               R3=atomic (index 2), R25=Ly-alpha (24), R26=HeI (25), R27=HeII (26) */
+            double Lambda_NUV = COOLR.lambda[2] + COOLR.lambda[24] + COOLR.lambda[25] + COOLR.lambda[26];
+
+            /* Bremsstrahlung R28 (index 27): NUV if hot, IR if cold */
+            if(temp >= 1e5) {Lambda_NUV += COOLR.lambda[27];} else {Lambda_IR += COOLR.lambda[27];}
+
+#ifdef RT_INFRARED
+            CellP[target].Lambda_RadiativeCooling_toRHDBins[RT_FREQ_BIN_INFRARED] = Lambda_IR / nH2_loc;
+#endif
+#ifdef RT_NUV
+            /* If Radiation_Temperature > 1e4, redirect NUV → IR (same as standard solver) */
+            if(CellP[target].Radiation_Temperature > 1.e4) {
+#ifdef RT_INFRARED
+                CellP[target].Lambda_RadiativeCooling_toRHDBins[RT_FREQ_BIN_INFRARED] += Lambda_NUV / nH2_loc;
+#endif
+                CellP[target].Lambda_RadiativeCooling_toRHDBins[RT_FREQ_BIN_NUV] = 0;
+            } else {
+                CellP[target].Lambda_RadiativeCooling_toRHDBins[RT_FREQ_BIN_NUV] = Lambda_NUV / nH2_loc;
+            }
+#elif defined(RT_INFRARED)
+            CellP[target].Lambda_RadiativeCooling_toRHDBins[RT_FREQ_BIN_INFRARED] += Lambda_NUV / nH2_loc;
+#endif
+
+#ifdef RT_INFRARED
+            /* Solve for equilibrium dust temperature. rt_ir_lambdadust root-finds Tdust
+               balancing: dust absorption (all bands) + gas-dust collisional exchange = dust emission.
+               It updates Dust_Temperature and Lambda_RadiativeCooling_toRHDBins[IR].
+               CHEMCOOL already applied gas-dust coupling (R1) to the gas energy, so we do NOT
+               apply the returned LambdaDust to the gas — only use it for Tdust + IR bookkeeping. */
+            rt_ir_lambdadust(target, temp);
+            CellP[target].DustTemp = CellP[target].Dust_Temperature;
+#endif
+        }
+#endif /* RADTRANSFER */
+
         return CellP[target].InternalEnergy;
     } else if(mode == 1) {
         return cooling_rate;

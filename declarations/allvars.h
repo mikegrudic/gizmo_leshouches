@@ -1161,8 +1161,23 @@ extern struct gravdata_out
     double Chimes_G0[CHIMES_LOCAL_UV_NBINS];
     double Chimes_fluxPhotIon[CHIMES_LOCAL_UV_NBINS];
 #endif
-    /* TREE_RAD Projection/H2/CO and G0_VARIABLE flux arrays removed from GravDataResult —
-     * now computed in separate treecol walk (gravity/treecol.cc) with its own MPI structs */
+#ifdef TREE_RAD
+    MyDouble Projection[NPIX];            /*!< HEALPix column density per pixel */
+#ifdef TREE_RAD_H2
+    MyDouble ProjectionH2[NPIX];          /*!< HEALPix H2 column density per pixel */
+    MyDouble ProjectionCO[NPIX];          /*!< HEALPix CO column density per pixel */
+#endif
+#endif
+#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
+    MyDouble UV_flux[NPIX];               /*!< HEALPix FUV flux per pixel, 8-13.6 eV */
+    MyDouble LW_flux[NPIX];               /*!< HEALPix LW flux per pixel, 11.2-13.6 eV (subset of FUV) */
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+    MyDouble NUV_flux[NPIX];              /*!< HEALPix NUV flux per pixel, 3.4-8 eV */
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+    MyDouble OPT_flux[NPIX];              /*!< HEALPix optical+NIR flux per pixel, 0.4-3.4 eV */
+#endif
+#endif
 #ifdef SINK_COMPTON_HEATING
     MyDouble Rad_Flux_AGN;
 #endif
@@ -1454,6 +1469,8 @@ enum iofields
   IO_RESOLVEDISM_DUST,
   IO_RESOLVEDISM_G0,
   IO_RESOLVEDISM_G0_LW,
+  IO_RESOLVEDISM_G0_NUV,
+  IO_RESOLVEDISM_G0_OPT,
   IO_RESOLVEDISM_CR_ZETA,
   IO_RESOLVEDISM_UV_LUM,
   IO_RESOLVEDISM_LW_LUM,
@@ -1554,17 +1571,14 @@ extern ALIGN(32) struct NODE
 #endif
 #endif
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-  MyFloat uv_luminosity;        /*!< total UV luminosity in tree node (from star particles), 6-13.6 eV */
-  MyFloat lw_luminosity;        /*!< total LW luminosity in tree node (from star particles), 11.2-13.6 eV */
-  MyFloat nuv_luminosity;       /*!< total near-UV luminosity in tree node, ~3.4-6 eV */
-  MyFloat opt_luminosity;       /*!< total optical+NIR luminosity in tree node, ~0.4-3.4 eV */
+  MyFloat uv_luminosity;        /*!< total FUV luminosity in tree node, 8-13.6 eV */
+  MyFloat lw_luminosity;        /*!< total LW luminosity in tree node, 11.2-13.6 eV (subset of FUV) */
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+  MyFloat nuv_luminosity;       /*!< total NUV luminosity in tree node, 3.4-8 eV */
 #endif
-#ifdef TREE_RAY_IR
-  MyFloat ir_luminosity;        /*!< total dust IR luminosity in tree node (from gas cells), [erg/s] */
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+  MyFloat opt_luminosity;       /*!< total optical+NIR luminosity in tree node, 0.4-3.4 eV */
 #endif
-#ifdef TREE_RAY_PI
-  MyFloat ion_luminosity;       /*!< total ionizing luminosity in tree node (from star particles), [erg/s] */
-  MyFloat neutral_h_mass;       /*!< total neutral H mass in tree node (from gas cells), [code units] */
 #endif
 #ifdef RT_USE_GRAVTREE
   MyFloat stellar_lum[N_RT_FREQ_BINS]; /*!< luminosity in the node*/

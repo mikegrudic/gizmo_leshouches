@@ -17,10 +17,17 @@ c /*from param.h in ZEUSMP for FORTRAN files*/
 #include "chemcool_consts.h"
 #ifdef CHEMCOOL
 c
-c He:H ratio by number (=> ratio by mass is 4*abhe)
+c He:H ratio by number (=> ratio by mass is 4*abhe).
+c H mass fraction X_H (n_H*m_p/rho). Runtime-variable common-block
+c variables; default values are set in coolinmo from the ABHE macro
+c (giving primordial consistency: X_H = 1/(1+4*ABHE)). With
+c GALSF_CHEMCOOL_VARIABLE_XH_AND_ABHE enabled, these are overwritten
+c per-particle by the C++ side from ElementAbundance[H/He] before each
+c evolve_abundances call; otherwise they stay at the compile-time
+c defaults and the chemistry behaves exactly as before.
 c
-      REAL abhe
-      parameter(abhe = ABHE)
+      REAL abhe, X_H_chem
+      common /chem_comp/ abhe, X_H_chem
 c
 c Symbolic constants representing the slot in the abundance vector passed
 c to DVODE occupied by each species. The same ordering is used in 
@@ -306,14 +313,13 @@ c
 c These variables are initialized during problem setup
 c 
       REAL deff, abundc, abundo, abundsi, abundD, abundM,
-     $     abundN, G0, G0_LW, G0_dust, G0_NUV, G0_OPT,
+     $     abundN, G0, G0_LW, G0_dust,
      $     phi_pah, tdust,
      $     dust_to_gas_ratio,
      $     AV_conversion_factor, cosmic_ray_ion_rate, redshift,
      $     AV_ext, pdv_term, h2_form_ex, h2_form_kin, dm_density,
      $     rt_phot_HI, rt_phot_HeI, rt_phot_HeII,
      $     rt_heat_HI, rt_heat_HeI, rt_heat_HeII,
-     $     chi_NUV, chi_OPT,
      $     cr_energy_density
       integer iphoto, iflag_mn, iflag_ad, iflag_atom, 
      $        iflag_3bh2a, iflag_3bh2b, iflag_h3pra,
@@ -333,7 +339,7 @@ c     Do not indent the next line!
      $               phtab, cst, dtlog, tdust, tmax, tmin, 
      $               deff, abundc, abundo, abundsi, abundD, 
      $               abundM, abundN, G0, G0_LW, G0_dust,
-     $               G0_NUV, G0_OPT, f_rsc,
+     $               f_rsc,
      $               phi_pah,
      $               dust_to_gas_ratio, AV_conversion_factor,
      $               cosmic_ray_ion_rate, redshift, AV_ext,
@@ -352,7 +358,6 @@ c     Do not indent the next line!
      $               dm_density,
      $               rt_phot_HI, rt_phot_HeI, rt_phot_HeII,
      $               rt_heat_HI, rt_heat_HeI, rt_heat_HeII,
-     $               chi_NUV, chi_OPT,
      $               cr_energy_density
 
       common /cooli/ iphoto, iflag_mn, iflag_ad, iflag_atom
@@ -389,15 +394,13 @@ c     Do not indent the next line!
       REAL diffuse_dust_heat
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
       REAL fac_uv(0:NPIX-1)
-      REAL fac_nuv(0:NPIX-1)
-      REAL fac_opt(0:NPIX-1)
 #endif
       REAL column_density_projection(0:NPIX-1)
       REAL column_density_projection_h2(0:NPIX-1)
       REAL column_density_projection_co(0:NPIX-1)
       common /project/ diffuse_dust_heat,
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-     $                 fac_uv, fac_nuv, fac_opt,
+     $                 fac_uv,
 #endif
      $                 column_density_projection, 
      $                 column_density_projection_h2,
@@ -412,6 +415,11 @@ c     Do not indent the next line!
 #ifdef ADIABATIC_DENSITY_THRESHOLD
       REAL yn_adiabatic
       parameter (yn_adiabatic = ADIABATIC_DENSITY_THRESHOLD)
+#endif
+
+#ifdef DEBUG_EVOLVE
+      integer n_co_clips, n_co_rejects
+      common /co_clip_counter/ n_co_clips, n_co_rejects
 #endif
 
       integer nradsource

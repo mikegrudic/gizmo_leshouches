@@ -80,6 +80,11 @@ void resolvedism_determine_SNe(void)
         if(table_age <= 0) continue; /* PMS: no winds yet */
         double log_age = log10(DMAX(table_age, 100.0));
         double M_new = stellar_M_current(logM, logZ, log_age);
+        /* Clamp: M_current must not drop below M_preSN while the star is alive.
+           The table has M_current=0 for ages beyond the lifetime, which would
+           cause the wind accumulator to swallow the entire star mass. */
+        double M_preSN_floor = stellar_M_preSN(logM, logZ);
+        if(M_new < M_preSN_floor) M_new = M_preSN_floor;
 
         if(P[i].M_current_old > 0 && M_new < P[i].M_current_old) {
             double dM = P[i].M_current_old - M_new; /* wind mass lost this step [Msun] */
@@ -161,40 +166,6 @@ void resolvedism_determine_SNe(void)
         double rem_mass = 1.4;   /* default: 1.4 Msun NS */
 #endif
 
-        /* FSN/DBH: direct collapse to BH, no explosion */
-        if(rem_type == REM_FSN || rem_type == REM_DBH) {
-            P[i].Mass = rem_mass / UNIT_MASS_IN_SOLAR;
-#ifdef GALSF_RESOLVEDISM_SAMPLE_IMF
-            P[i].MstarSampleIMF[0] = 0;
-#endif
-#ifdef GALSF_RESOLVEDISM_STOCHASTIC_IMF
-            P[i].Mstar = 0;
-#endif
-#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-            P[i].UV_luminosity = 0;
-            P[i].LW_luminosity = 0;
-#ifdef GALSF_RESOLVEDISM_PHOTOION
-            P[i].Lyman_photons_per_sec = 0;
-#endif
-#endif
-            P[i].SNe_ThisTimeStep = -1; /* mark as done, no explosion */
-#ifdef GALSF_RESOLVEDISM_BH_PROMOTION
-            /* Promote to Type 5 sink (stellar-mass BH) */
-            P[i].Type = 5;
-            P[i].SinkSubType = 1;
-            P[i].Sink_Mass = P[i].Mass;
-            P[i].Sink_Formation_Mass = P[i].Mass;
-            P[i].Sink_Mdot = 0;
-            P[i].Sink_TimeBinGasNeighbor = 0;
-            P[i].SwallowID = 0;
-            P[i].IndexMapToTempStruc = -1;
-            P[i].KernelRadius = All.ForceSoftening[5];
-            TreeReconstructFlag = 1;
-#endif
-            n_collapse_local++;
-            continue;
-        }
-
         /* Force-dump any remaining accumulated wind mass before the SN/AGB event.
            This ensures wind mass tracked by M_current but not yet injected to gas
            gets properly returned before the explosion yields are computed. */
@@ -205,6 +176,10 @@ void resolvedism_determine_SNe(void)
             continue; /* skip SN flagging this step */
         }
 #endif
+        /* Without winds: M_particle = M_init at death. The full Mej = M_init - rem_mass
+           is injected through the thermal pass. The sn_yield accounts for nucleosynthesis
+           on the M_preSN - rem_mass portion; the extra M_init - M_preSN portion gets
+           birth composition automatically via X_birth * Mej in the yield formula. */
         /* Determine flag: 1 = explosive SN (ECSN/CCSN/PISN/PPISN), 2 = AGB/WD death */
         if(rem_type == REM_WD) {
             P[i].SNe_ThisTimeStep = 2; /* AGB: mass+metals, no energy */
@@ -672,8 +647,8 @@ void resolvedism_inject_sn_energy(void)
             }
 #endif
 #ifdef GALSF_RESOLVEDISM_BH_PROMOTION
-            /* PPISN: explosive SN that still leaves a BH remnant — promote after ejecta injection */
-            if(rem_type == REM_PPISN) {
+            /* BH-producing channels: promote to sink after ejecta injection */
+            if(rem_type == REM_PPISN || rem_type == REM_FSN || rem_type == REM_DBH) {
                 P[i].Type = 5;
                 P[i].SinkSubType = 1;
                 P[i].Sink_Mass = P[i].Mass;
@@ -707,9 +682,20 @@ void resolvedism_inject_sn_energy(void)
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
         P[i].UV_luminosity = 0;
         P[i].LW_luminosity = 0;
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+        P[i].NUV_luminosity = 0;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+        P[i].OPT_luminosity = 0;
+#endif
 #ifdef GALSF_RESOLVEDISM_PHOTOION
         P[i].Lyman_photons_per_sec = 0;
 #endif
+#endif
+#ifdef GALSF_RESOLVEDISM_WINDS
+        P[i].WindMassAccum = 0;
+        P[i].WindMomentumAccum = 0;
+        P[i].M_current_old = 0;
 #endif
 #ifdef GALSF_RESOLVEDISM_STOCHASTIC_IMF
         P[i].Mstar = 0;

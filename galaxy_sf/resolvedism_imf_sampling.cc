@@ -109,10 +109,20 @@ void finalize_sampled_star(int i, double M_drawn)
             double table_age = star_age_yr - stellar_t_PMS(logM, logZ);
             if(table_age > 0) {
                 double log_age = log10(DMAX(table_age, 100.0));
-                P[i].UV_luminosity = pow(10., stellar_log_L_FUV_total(logM, logZ, log_age));
-                P[i].LW_luminosity = pow(10., stellar_log_L_LW(logM, logZ, log_age));
+#if defined(RADTRANSFER)
+                /* M1 RT: FUV = 8-13.6 eV (PE bin), NUV = 3.4-8 eV, OPT = 0.4-3.4 eV */
+                P[i].UV_luminosity  = pow(10., stellar_log_L_FUV_M1(logM, logZ, log_age));
+#else
+                /* Tree-ray: FUV = 6-13.6 eV (PE heating + LW), NUV = 3.4-8 eV, OPT = 0.4-3.4 eV */
+                P[i].UV_luminosity  = pow(10., stellar_log_L_FUV_total(logM, logZ, log_age));
+#endif
+                P[i].LW_luminosity  = pow(10., stellar_log_L_LW(logM, logZ, log_age));
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
                 P[i].NUV_luminosity = pow(10., stellar_log_L_NUV(logM, logZ, log_age));
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
                 P[i].OPT_luminosity = pow(10., stellar_log_L_OPT_NIR(logM, logZ, log_age));
+#endif
 #ifdef GALSF_RESOLVEDISM_PHOTOION
                 P[i].Lyman_photons_per_sec = pow(10., stellar_log_Q_ion(logM, logZ, log_age));
 #endif
@@ -120,8 +130,12 @@ void finalize_sampled_star(int i, double M_drawn)
 #else
             P[i].UV_luminosity = pow(10., get_logL_pe(M_drawn));
             P[i].LW_luminosity = P[i].UV_luminosity;
-            P[i].NUV_luminosity = 0; /* no NUV tables without STELLAR_TABLES */
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+            P[i].NUV_luminosity = 0;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
             P[i].OPT_luminosity = 0;
+#endif
 #ifdef GALSF_RESOLVEDISM_PHOTOION
             P[i].Lyman_photons_per_sec = pow(10., get_logS_ly(M_drawn));
 #endif
@@ -624,8 +638,6 @@ void assign_stellar_masses(void)
 
         /* Star mass = actual mass accreted (exact conservation) */
         P[i].Mass = mass_acc;
-        printf("IMF_DEBUG_SET: Task=%d i=%d ID=%llu Mass=%.6e mass_acc=%.6e Type=%d\n",
-            ThisTask, i, (unsigned long long)P[i].ID, P[i].Mass, mass_acc, P[i].Type);
 
         /* CoM velocity from all donor cells */
         if(mass_acc > 0) {

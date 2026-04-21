@@ -147,8 +147,10 @@ void resolvedism_load_stellar_tables(void)
     StellarTbl.logR_cm         = (float *)mymalloc("stbl_logRcm",  n3d * sizeof(float));
 
     /* Non-ionizing band luminosities — always needed for G0_VARIABLE / tree-based fluxes */
-    StellarTbl.log_L_NUV       = (float *)mymalloc("stbl_logLNUV",  n3d * sizeof(float));
-    StellarTbl.log_L_OPT_NIR   = (float *)mymalloc("stbl_logLOPT",  n3d * sizeof(float));
+    StellarTbl.log_L_NUV       = (float *)mymalloc("stbl_logLNUV",    n3d * sizeof(float));
+    StellarTbl.log_L_NUV_lo    = (float *)mymalloc("stbl_logLNUVlo",  n3d * sizeof(float));
+    StellarTbl.log_L_FUV_M1    = (float *)mymalloc("stbl_logLFUVM1",  n3d * sizeof(float));
+    StellarTbl.log_L_OPT_NIR   = (float *)mymalloc("stbl_logLOPT",    n3d * sizeof(float));
 
     /* Ionizing sub-band luminosities for M1 RT */
 #ifdef RADTRANSFER
@@ -218,6 +220,8 @@ void resolvedism_load_stellar_tables(void)
 
         /* Non-ionizing band luminosities — always needed */
         read_hdf5_dataset_as_float(file, "log_L_NUV",      StellarTbl.log_L_NUV,       n3d);
+        read_hdf5_dataset_as_float(file, "log_L_NUV_lo",   StellarTbl.log_L_NUV_lo,    n3d);
+        read_hdf5_dataset_as_float(file, "log_L_FUV_M1",   StellarTbl.log_L_FUV_M1,    n3d);
         read_hdf5_dataset_as_float(file, "log_L_OPT_NIR",  StellarTbl.log_L_OPT_NIR,   n3d);
 
         /* Ionizing sub-band luminosities (only for M1 RT) */
@@ -583,31 +587,88 @@ void resolvedism_load_stellar_tables(void)
 
         /* --- Test 8: Remnant mass sanity --- */
         {
-            int nfail = 0;
+            int nfail = 0, nprint = 0;
             for(int iz = 0; iz < STBL_NZ; iz++) {
                 for(int im = 0; im < STBL_NM; im++) {
                     double M = StellarTbl.M[im];
                     int rt = StellarTbl.remnant_type[IDX2(iz, im)];
                     double rm = StellarTbl.remnant_mass[IDX2(iz, im)];
+                    double Z = pow(10., StellarTbl.log_Z[iz]);
                     /* Remnant mass must be < M_init */
                     if(rm > M * 1.01) {
-                        if(nfail < 3) printf("  WARNING: remnant_mass=%.2f > M_init=%.2f at Z=%.4f (type=%d)\n", rm, M, pow(10., StellarTbl.log_Z[iz]), rt);
-                        nfail++;
+                        if(nprint < 3) printf("  WARNING: remnant_mass=%.2f > M_init=%.2f at Z=%.4f (type=%d)\n", rm, M, Z, rt);
+                        nfail++; nprint++;
                     }
                     /* Remnant mass must be > 0 for non-PISN */
-                    if(rt != 5 && rm <= 0 && M >= 0.5) {
-                        if(nfail < 6) printf("  WARNING: remnant_mass=0 for non-PISN M=%.2f Z=%.4f type=%d\n", M, pow(10., StellarTbl.log_Z[iz]), rt);
-                        nfail++;
+                    if(rt != REM_PISN && rm <= 0 && M >= 0.5) {
+                        if(nprint < 6) printf("  WARNING: remnant_mass=0 for non-PISN M=%.2f Z=%.4f type=%d\n", M, Z, rt);
+                        nfail++; nprint++;
                     }
                     /* PISN must have rm=0 */
-                    if(rt == 5 && rm > 0.01) {
-                        if(nfail < 9) printf("  WARNING: PISN with remnant_mass=%.2f at M=%.1f Z=%.4f\n", rm, M, pow(10., StellarTbl.log_Z[iz]));
-                        nfail++;
+                    if(rt == REM_PISN && rm > 0.01) {
+                        if(nprint < 9) printf("  WARNING: PISN with remnant_mass=%.2f at M=%.1f Z=%.4f\n", rm, M, Z);
+                        nfail++; nprint++;
+                    }
+                    /* PPISN remnant must be massive BH (>30 Msun) */
+                    if(rt == REM_PPISN && rm < 30.0) {
+                        if(nprint < 12) printf("  WARNING: PPISN with remnant_mass=%.2f < 30 Msun at M=%.1f Z=%.4f\n", rm, M, Z);
+                        nfail++; nprint++;
+                    }
+                    /* Remnant mass continuity: check jump to next mass grid point */
+                    if(im > 0) {
+                        int rt_prev = StellarTbl.remnant_type[IDX2(iz, im-1)];
+                        double rm_prev = StellarTbl.remnant_mass[IDX2(iz, im-1)];
+                        /* Only check continuity within same remnant type and for explosive types */
+                        if(rt == rt_prev && rt != REM_WD && rt != REM_FSN && rt != REM_DBH && rm_prev > 1.0 && rm > 1.0) {
+                            double ratio = rm / rm_prev;
+                            if(ratio < 0.1 || ratio > 10.0) {
+                                if(nprint < 15) printf("  WARNING: remnant mass jump %.2f->%.2f (x%.1f) between M=%.1f->%.1f at Z=%.4f type=%d\n",
+                                    rm_prev, rm, ratio, StellarTbl.M[im-1], M, Z, rt);
+                                nfail++; nprint++;
+                            }
+                        }
                     }
                 }
             }
             if(nfail > 0) { printf("  WARNING: %d remnant mass inconsistencies\n", nfail); n_warn++; }
             else printf("  [PASS] Remnant mass consistent for all (Z,M): 0 < rem < M_init (PISN=0)\n");
+        }
+
+        /* --- Test 8b: Ejecta metallicity sanity --- */
+        {
+            int nfail = 0, nprint = 0;
+            for(int iz = 0; iz < STBL_NZ; iz++) {
+                double Z_birth = pow(10., StellarTbl.log_Z[iz]);
+                for(int im = 0; im < STBL_NM; im++) {
+                    double M = StellarTbl.M[im];
+                    int rt = StellarTbl.remnant_type[IDX2(iz, im)];
+                    double rm = StellarTbl.remnant_mass[IDX2(iz, im)];
+                    if(rt == REM_FSN || rt == REM_DBH) continue; /* no yields */
+                    if(rt == REM_PISN) continue; /* PISN are legitimately metal-rich (full disruption) */
+                    if(M < 8.0) continue; /* only check massive stars */
+                    double Mej = M - rm;
+                    if(Mej < 0.1) continue;
+                    /* Compute total metal yield mass */
+                    double logM_t = StellarTbl.log_M[im], logZ_t = StellarTbl.log_Z[iz];
+                    double metal_yield = 0;
+                    for(int kk = ELEM_C; kk < STBL_NELEM; kk++) {
+                        double ny = StellarTbl.net_yields[IDX3(iz, im, kk)];
+                        /* Apply same clip as injection code */
+                        double X_birth_k = (kk < ELEM_C) ? 0.0 : (StellarTbl.Z[iz] / 0.014) * 0.0134; /* approx */
+                        double M_elem_ej = ny + X_birth_k * Mej;
+                        if(M_elem_ej > 0) metal_yield += M_elem_ej;
+                    }
+                    double Z_ej = metal_yield / Mej;
+                    /* Ejecta metallicity should not exceed 50% — no physical star does this */
+                    if(Z_ej > 0.5) {
+                        if(nprint < 5) printf("  WARNING: ejecta Z=%.3f (%.0fx solar) at M=%.1f Z=%.4f type=%d rem=%.1f Mej=%.1f\n",
+                            Z_ej, Z_ej/0.014, M, Z_birth, rt, rm, Mej);
+                        nfail++; nprint++;
+                    }
+                }
+            }
+            if(nfail > 0) { printf("  WARNING: %d entries with ejecta Z > 50%%\n", nfail); n_warn++; }
+            else printf("  [PASS] Ejecta metallicity < 50%% for all massive star entries\n");
         }
 
         /* --- Test 9: Net yield mass conservation: sum over all elements ≈ 0 --- */
@@ -1000,6 +1061,16 @@ double stellar_log_L_NUV(double logM, double logZ, double log_age)
     return interp3d(StellarTbl.log_L_NUV, logM, logZ, log_age);
 }
 
+double stellar_log_L_NUV_lo(double logM, double logZ, double log_age)
+{
+    return interp3d(StellarTbl.log_L_NUV_lo, logM, logZ, log_age);
+}
+
+double stellar_log_L_FUV_M1(double logM, double logZ, double log_age)
+{
+    return interp3d(StellarTbl.log_L_FUV_M1, logM, logZ, log_age);
+}
+
 double stellar_log_L_OPT_NIR(double logM, double logZ, double log_age)
 {
     return interp3d(StellarTbl.log_L_OPT_NIR, logM, logZ, log_age);
@@ -1105,11 +1176,43 @@ double return_resolvedism_species_for_diffusion(int i, int k)
 #endif
     if(k < 0) return -1;
 #if defined(GALSF_RESOLVEDISM_METALS_INDIVIDUAL)
-    if(k < NUM_RESOLVEDISM_ELEMENTS) return P[i].ElementAbundance[k];
+    if(k < NUM_RESOLVEDISM_ELEMENTS) {
+#if defined(TURB_DIFF_METALS)
+        double dust_locked = 0;
+#if defined(GALSF_RESOLVEDISM_DUST)
+        if      (k == ELEM_C ) dust_locked = CellP[i].Dust[0];
+        else if (k == ELEM_O ) dust_locked = CellP[i].Dust[1];
+        else if (k == ELEM_Mg) dust_locked = CellP[i].Dust[2];
+        else if (k == ELEM_Si) dust_locked = CellP[i].Dust[3];
+        else if (k == ELEM_Fe) dust_locked = CellP[i].Dust[4];
+#endif
+#if defined(CHEMCOOL)
+        /* Return free C/O (subtract CO-locked fraction) to match input packing */
+        if(k == ELEM_C || k == ELEM_O) {
+            double X_H = DMAX(P[i].ElementAbundance[ELEM_H], 1e-10);
+            double CO_locked = CellP[i].TracAbund[2] * ((k == ELEM_C) ? 12.0 : 16.0) * X_H;
+            return DMAX(P[i].ElementAbundance[k] - CO_locked - dust_locked, 0);
+        }
+#endif
+        return DMAX(P[i].ElementAbundance[k] - dust_locked, 0);
+#else
+        return P[i].ElementAbundance[k];
+#endif
+    }
     k -= NUM_RESOLVEDISM_ELEMENTS;
 #endif
 #if defined(GALSF_RESOLVEDISM_DUST)
     if(k < NUM_RESOLVEDISM_DUST) return CellP[i].Dust[k];
+    k -= NUM_RESOLVEDISM_DUST;
+#endif
+#if defined(CHEMCOOL) && defined(TURB_DIFF_METALS)
+    if(k < TRAC_NUM) {
+        /* Return mass fraction (not abundance ratio) to match input packing.
+           X_k = (n_k/n_H) * A_k * X_H.  Network 5: H2=2, H+=1, CO=28 */
+        static const double trac_molwt[TRAC_NUM] = {2.0, 1.0, 28.0};
+        double X_H = DMAX(P[i].ElementAbundance[ELEM_H], 1e-10);
+        return CellP[i].TracAbund[k] * trac_molwt[k] * X_H;
+    }
 #endif
     return -1;
 }

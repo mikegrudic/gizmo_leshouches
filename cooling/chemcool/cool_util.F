@@ -853,10 +853,8 @@ c
 c We assume that the visual/IR/sub-mm background scales linearly with the UV background.
 c In the future, we should make these independently configurable.
 c 
-c Per-band shielded dust heating: FUV*chi_isrf + NUV*chi_NUV + OPT*chi_OPT
-        field_strength = (G0_dust * chi_isrf
-     $                  + G0_NUV * chi_NUV
-     $                  + G0_OPT * chi_OPT) / 1.7
+c Dust ISRF heating from FUV only (6-13.6 eV)
+        field_strength = G0_dust * chi_isrf / 1.7
         if (isrf_option .eq. 1) then
            isrf_heat  = 5.8d-24 * yn * field_strength
         else
@@ -868,11 +866,13 @@ c        print*, "chi_isrf = ", chi_isrf
 c        print*, "yn = ", yn
 c        print*, "field_strength = ", field_strength
 
-#ifdef TREE_RAY_IR
+#ifdef DIFFUSE_DUST_EMISSION
 c
-c Heating from IR radiation transported by TREE_RAY from surrounding dust.
-c The term 'diffuse_dust_heat' is populated in chemcool.cc from the
-c per-pixel IR flux delivered by the tree_ray walk.
+c This is the heating from the surrounding dust, assuming its optically
+c thin to its own emission (i.e. no column attenuation between emitter and 
+c receiver). The term 'diffuse_dust_heat' is stored in the 'project/PROJECT.' 
+c common block / external structure. It is always there if TREE_RAD is defined
+c and so without #def DIFFUSE_DUST_EMISSION it will contain junk!
 c
         isrf_heat = isrf_heat + diffuse_dust_heat
 #endif

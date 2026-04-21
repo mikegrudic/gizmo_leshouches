@@ -381,8 +381,8 @@ void calculate_non_standard_physics(void)
     MPI_Barrier(MPI_COMM_WORLD); CPU_Step[CPU_RTNONFLUXOPS] += measure_time();
 #endif // RADTRANSFER block
 
-#if defined(GALSF_RESOLVEDISM_PHOTOION) && !defined(TREE_RAY_PI)
-    resolvedism_photoionize(); // resolved ISM Stromgren sphere photo-ionization (skipped when TREE_RAY_PI handles ionization)
+#ifdef GALSF_RESOLVEDISM_PHOTOION
+    resolvedism_photoionize(); // resolved ISM Stromgren sphere photo-ionization
 #endif
 
 #ifdef COOLING	/* radiative cooling and chemistry  */
