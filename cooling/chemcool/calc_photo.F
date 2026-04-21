@@ -293,6 +293,29 @@ c
          nray_end = NPIX-1
          nray_start = 0
 
+#ifdef TREE_RAY
+c     TREERAY: fluxes are already dust+H2 attenuated during the tree walk
+c     (see gravity/tree_ray.cc). Set the post-hoc dust transmission to unity
+c     so we don't double-attenuate. We still need chi_isrf (which only
+c     enters the PE-heating spectral-shape factor) and dust opacity for
+c     the chemistry's own self-shielding diagnostics.
+         f_dust  = 1d0
+         f_simp  = 1d0
+         df25    = 1d0
+         df30    = 1d0
+         do I = nray_start, nray_end
+#ifdef GALSF_RESOLVEDISM_G0_VARIABLE
+           fac_uv_pix = fac_uv(I)
+#else
+           fac_uv_pix = 1d0 / nray
+#endif
+           AV     = AV_ext + AV_conversion_factor
+     $            * dust_to_gas_ratio * column_density_projection(I)
+           AV = AV + AVlocal
+           chi_isrf = chi_isrf + fac_uv_pix * chi(AV)
+         enddo
+#else
+c     TREE_RAD / RAYTRACE: post-hoc dust attenuation of fluxes
          do I = nray_start, nray_end
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
            fac_uv_pix = fac_uv(I)
@@ -329,6 +352,7 @@ c
             df30 = df30 + fac_uv_pix * exp(-3.0d0 * AV)
 
          enddo
+#endif /* TREE_RAY else: TREE_RAD/RAYTRACE post-hoc attenuation */
 #endif /* RAYTRACE or TREE_RAD */
       endif
 c

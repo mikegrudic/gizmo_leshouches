@@ -1579,6 +1579,13 @@ extern ALIGN(32) struct NODE
 #ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
   MyFloat opt_luminosity;       /*!< total optical+NIR luminosity in tree node, 0.4-3.4 eV */
 #endif
+#ifdef TREE_RAY_IR
+  MyFloat ir_luminosity;        /*!< total dust IR luminosity in tree node (from gas cells), [erg/s] */
+#endif
+#ifdef TREE_RAY_PI
+  MyFloat ion_luminosity;       /*!< total ionizing luminosity in tree node (from star particles), [erg/s] */
+  MyFloat neutral_h_mass;       /*!< total neutral H mass in tree node (from gas cells), [code units] */
+#endif
 #endif
 #ifdef RT_USE_GRAVTREE
   MyFloat stellar_lum[N_RT_FREQ_BINS]; /*!< luminosity in the node*/

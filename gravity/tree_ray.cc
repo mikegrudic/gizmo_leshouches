@@ -241,7 +241,12 @@ static int tree_ray_evaluate(int target, int mode, int *exportflag, int *exportn
                 uv_lum = 0; lw_lum = 0; nuv_lum = 0; opt_lum = 0;
                 if(P[no].Type == 4 || P[no].Type == 5) {
                     uv_lum = P[no].UV_luminosity; lw_lum = P[no].LW_luminosity;
-                    nuv_lum = P[no].NUV_luminosity; opt_lum = P[no].OPT_luminosity;
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+                    nuv_lum = P[no].NUV_luminosity;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+                    opt_lum = P[no].OPT_luminosity;
+#endif
                 }
 #ifdef TREE_RAY_IR
                 ir_lum = 0;
@@ -373,8 +378,14 @@ static int tree_ray_evaluate(int target, int mode, int *exportflag, int *exportn
                 r2 = dx*dx + dy*dy + dz*dz;
 
                 /* Branch pruning */
-                int node_has_lum = (nop->uv_luminosity > 0 || nop->lw_luminosity > 0 ||
-                                    nop->nuv_luminosity > 0 || nop->opt_luminosity > 0);
+                int node_has_lum = (nop->uv_luminosity > 0 || nop->lw_luminosity > 0
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+                                    || nop->nuv_luminosity > 0
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+                                    || nop->opt_luminosity > 0
+#endif
+                                   );
 #ifdef TREE_RAY_IR
                 node_has_lum = node_has_lum || (nop->ir_luminosity > 0);
 #endif
@@ -389,7 +400,12 @@ static int tree_ray_evaluate(int target, int mode, int *exportflag, int *exportn
                 h2mass = nop->h2mass; comass = nop->comass;
 #endif
                 uv_lum = nop->uv_luminosity; lw_lum = nop->lw_luminosity;
-                nuv_lum = nop->nuv_luminosity; opt_lum = nop->opt_luminosity;
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+                nuv_lum = nop->nuv_luminosity;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+                opt_lum = nop->opt_luminosity;
+#endif
 #ifdef TREE_RAY_IR
                 ir_lum = nop->ir_luminosity;
 #endif
@@ -594,7 +610,16 @@ static int tree_ray_evaluate(int target, int mode, int *exportflag, int *exportn
 #ifdef TREE_RAD_H2
             for(kp = 0; kp < NPIX; kp++) { CellP[target].ProjectionH2[kp] = treecol_ProjectionH2[kp]; CellP[target].ProjectionCO[kp] = treecol_ProjectionCO[kp]; }
 #endif
-            for(kp = 0; kp < NPIX; kp++) { CellP[target].UV_flux[kp] = treeray_UV_flux[kp]; CellP[target].LW_flux[kp] = treeray_LW_flux[kp]; CellP[target].NUV_flux[kp] = treeray_NUV_flux[kp]; CellP[target].OPT_flux[kp] = treeray_OPT_flux[kp]; }
+            for(kp = 0; kp < NPIX; kp++) {
+                CellP[target].UV_flux[kp] = treeray_UV_flux[kp];
+                CellP[target].LW_flux[kp] = treeray_LW_flux[kp];
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+                CellP[target].NUV_flux[kp] = treeray_NUV_flux[kp];
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+                CellP[target].OPT_flux[kp] = treeray_OPT_flux[kp];
+#endif
+            }
 #ifdef TREE_RAY_IR
             for(kp = 0; kp < NPIX; kp++) CellP[target].IR_flux[kp] = treeray_IR_flux[kp];
 #endif
@@ -888,7 +913,16 @@ void tree_ray_tree(void)
 #ifdef TREE_RAD_H2
                 for(kp = 0; kp < NPIX; kp++) { CellP[place].ProjectionH2[kp] += TreeRayDataOut[j].ProjectionH2[kp]; CellP[place].ProjectionCO[kp] += TreeRayDataOut[j].ProjectionCO[kp]; }
 #endif
-                for(kp = 0; kp < NPIX; kp++) { CellP[place].UV_flux[kp] += TreeRayDataOut[j].UV_flux[kp]; CellP[place].LW_flux[kp] += TreeRayDataOut[j].LW_flux[kp]; CellP[place].NUV_flux[kp] += TreeRayDataOut[j].NUV_flux[kp]; CellP[place].OPT_flux[kp] += TreeRayDataOut[j].OPT_flux[kp]; }
+                for(kp = 0; kp < NPIX; kp++) {
+                    CellP[place].UV_flux[kp] += TreeRayDataOut[j].UV_flux[kp];
+                    CellP[place].LW_flux[kp] += TreeRayDataOut[j].LW_flux[kp];
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+                    CellP[place].NUV_flux[kp] += TreeRayDataOut[j].NUV_flux[kp];
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+                    CellP[place].OPT_flux[kp] += TreeRayDataOut[j].OPT_flux[kp];
+#endif
+                }
 #ifdef TREE_RAY_IR
                 for(kp = 0; kp < NPIX; kp++) CellP[place].IR_flux[kp] += TreeRayDataOut[j].IR_flux[kp];
 #endif
@@ -972,8 +1006,12 @@ void tree_ray_tree(void)
             if(P[i].Type == 4 || P[i].Type == 5) {
                 L_emit_uv_local  += P[i].UV_luminosity;
                 L_emit_lw_local  += P[i].LW_luminosity;
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
                 L_emit_nuv_local += P[i].NUV_luminosity;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
                 L_emit_opt_local += P[i].OPT_luminosity;
+#endif
             }
         }
 
@@ -989,8 +1027,12 @@ void tree_ray_tree(void)
                 for(kp = 0; kp < NPIX; kp++) {
                     fuv  += CellP[i].UV_flux[kp];
                     flw  += CellP[i].LW_flux[kp];
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
                     fnuv += CellP[i].NUV_flux[kp];
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
                     fopt += CellP[i].OPT_flux[kp];
+#endif
                 }
                 /* Flux is in code units [erg/s / code_length²]; convert to CGS */
                 double fac_flux = All.cf_a2inv / (UNIT_LENGTH_IN_CGS * UNIT_LENGTH_IN_CGS);
@@ -1027,8 +1069,12 @@ void tree_ray_tree(void)
                     for(kp = 0; kp < NPIX; kp++) {
                         CellP[i].UV_flux[kp]  *= f_uv;
                         CellP[i].LW_flux[kp]  *= f_lw;
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
                         CellP[i].NUV_flux[kp] *= f_nuv;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
                         CellP[i].OPT_flux[kp] *= f_opt;
+#endif
                     }
                 }
             }

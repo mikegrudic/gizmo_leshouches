@@ -149,7 +149,12 @@ static int treecol_evaluate(int target, int mode, int *exportflag, int *exportno
                 uv_lum = 0; lw_lum = 0; nuv_lum = 0; opt_lum = 0;
                 if(P[no].Type == 4 || P[no].Type == 5) {
                     uv_lum = P[no].UV_luminosity; lw_lum = P[no].LW_luminosity;
-                    nuv_lum = P[no].NUV_luminosity; opt_lum = P[no].OPT_luminosity;
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+                    nuv_lum = P[no].NUV_luminosity;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+                    opt_lum = P[no].OPT_luminosity;
+#endif
                 }
 #endif
                 /* accumulate if within shielding length and nonzero */
@@ -262,8 +267,14 @@ static int treecol_evaluate(int target, int mode, int *exportflag, int *exportno
                  * For fluxes we need to go further but 1/r² makes distant nodes negligible. */
                 int dominated_by_columns = 1;
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-                if(nop->uv_luminosity > 0 || nop->lw_luminosity > 0 ||
-                   nop->nuv_luminosity > 0 || nop->opt_luminosity > 0)
+                if(nop->uv_luminosity > 0 || nop->lw_luminosity > 0
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+                   || nop->nuv_luminosity > 0
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+                   || nop->opt_luminosity > 0
+#endif
+                  )
                     dominated_by_columns = 0;
 #endif
                 if(dominated_by_columns && r2 > shielding_length2) {
@@ -284,8 +295,12 @@ static int treecol_evaluate(int target, int mode, int *exportflag, int *exportno
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
                 uv_lum = nop->uv_luminosity;
                 lw_lum = nop->lw_luminosity;
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
                 nuv_lum = nop->nuv_luminosity;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
                 opt_lum = nop->opt_luminosity;
+#endif
 #endif
 
                 if(r2 > 0) {
@@ -338,7 +353,16 @@ static int treecol_evaluate(int target, int mode, int *exportflag, int *exportno
             for(kp = 0; kp < NPIX; kp++) { CellP[target].ProjectionH2[kp] = treecol_ProjectionH2[kp]; CellP[target].ProjectionCO[kp] = treecol_ProjectionCO[kp]; }
 #endif
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-            for(kp = 0; kp < NPIX; kp++) { CellP[target].UV_flux[kp] = treecol_UV_flux[kp]; CellP[target].LW_flux[kp] = treecol_LW_flux[kp]; CellP[target].NUV_flux[kp] = treecol_NUV_flux[kp]; CellP[target].OPT_flux[kp] = treecol_OPT_flux[kp]; }
+            for(kp = 0; kp < NPIX; kp++) {
+                CellP[target].UV_flux[kp] = treecol_UV_flux[kp];
+                CellP[target].LW_flux[kp] = treecol_LW_flux[kp];
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+                CellP[target].NUV_flux[kp] = treecol_NUV_flux[kp];
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+                CellP[target].OPT_flux[kp] = treecol_OPT_flux[kp];
+#endif
+            }
 #endif
         }
     }
@@ -545,7 +569,16 @@ void treecol_tree(void)
                 for(kp = 0; kp < NPIX; kp++) { CellP[place].ProjectionH2[kp] += TreecolDataOut[j].ProjectionH2[kp]; CellP[place].ProjectionCO[kp] += TreecolDataOut[j].ProjectionCO[kp]; }
 #endif
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-                for(kp = 0; kp < NPIX; kp++) { CellP[place].UV_flux[kp] += TreecolDataOut[j].UV_flux[kp]; CellP[place].LW_flux[kp] += TreecolDataOut[j].LW_flux[kp]; CellP[place].NUV_flux[kp] += TreecolDataOut[j].NUV_flux[kp]; CellP[place].OPT_flux[kp] += TreecolDataOut[j].OPT_flux[kp]; }
+                for(kp = 0; kp < NPIX; kp++) {
+                    CellP[place].UV_flux[kp] += TreecolDataOut[j].UV_flux[kp];
+                    CellP[place].LW_flux[kp] += TreecolDataOut[j].LW_flux[kp];
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+                    CellP[place].NUV_flux[kp] += TreecolDataOut[j].NUV_flux[kp];
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+                    CellP[place].OPT_flux[kp] += TreecolDataOut[j].OPT_flux[kp];
+#endif
+                }
 #endif
             }
         }
@@ -577,8 +610,12 @@ void treecol_tree(void)
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
                     uv_sum += CellP[i].UV_flux[kp];
                     lw_sum += CellP[i].LW_flux[kp];
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
                     nuv_sum += CellP[i].NUV_flux[kp];
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
                     opt_sum += CellP[i].OPT_flux[kp];
+#endif
 #endif
                 }
                 if(col_sum > 0) n_nonzero_col++;

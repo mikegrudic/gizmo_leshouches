@@ -478,6 +478,41 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
 #endif
 #endif /* TREE_RAD_H2 */
 
+#ifdef TREE_RAY_IR
+    /* Convert received IR flux to a volumetric dust heating rate [erg/s/cm^3]
+     * for the TREE_RAY_IR hook in cool_util.F.
+     * Heating rate = κ_IR × ρ_dust × c × u_IR, where u_IR = (4π/c) × J_IR.
+     * Simplification: κ_IR × ρ_dust = σ_IR_ref × DGR × nH, and
+     * J_IR = (1/4π) × Σ_pix IR_flux[pix] × (NPIX / 4π).
+     * So: heating = σ_IR_ref × DGR × nH × Σ_pix IR_flux[pix] in CGS. */
+    {
+        double IR_flux_tot_cgs = 0;
+        double fac_flux_cgs = All.cf_a2inv / (UNIT_LENGTH_IN_CGS * UNIT_LENGTH_IN_CGS);
+        for(i = 0; i < NPIX; i++)
+            IR_flux_tot_cgs += CellP[target].IR_flux[i] * fac_flux_cgs;
+        double sigma_ir_abs = 8.27e-25 * All.DGRnormalized;
+        PROJECT.diffuse_dust_heat = sigma_ir_abs * yn * IR_flux_tot_cgs;
+    }
+#else
+    PROJECT.diffuse_dust_heat = 0;
+#endif
+
+#ifdef TREE_RAY_PI
+    /* Compute photoionization rate and heating from tree-transported ionizing flux.
+     * Same physics as M1 RT (chemcool.cc lines 344-350): Γ = σ × F_tot / <hν>.
+     * Values: σ_HI = 6.3e-18 cm², <hν> = 27.2 eV (same as rt_chem.cc). */
+    {
+        double fac_flux_cgs = All.cf_a2inv / (UNIT_LENGTH_IN_CGS * UNIT_LENGTH_IN_CGS);
+        double F_ion_tot_cgs = 0;
+        for(i = 0; i < NPIX; i++)
+            F_ion_tot_cgs += CellP[target].Ion_flux[i] * fac_flux_cgs;
+        double E_phot = 27.2 * 1.60218e-12;  /* 27.2 eV in erg */
+        double sigma_HI = 6.3e-18;           /* cm² */
+        double Gamma_HI = sigma_HI * F_ion_tot_cgs / E_phot;
+        COOLR.rt_phot_HI = Gamma_HI;                                  /* [s⁻¹] */
+        COOLR.rt_heat_HI = Gamma_HI * (27.2 - 13.6) * 1.60218e-12;   /* [erg/s per atom] */
+    }
+#endif
 
     /* Switch off chemistry for high-density particles */
     COOLI.no_chem = 0;
@@ -495,6 +530,10 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
     /* abe_HII = H+ + He+ + D+ + C+ ≈ 1 + abhe + abundD + abundc */
     double abe_HII = 1.0 + ABHE + COOLR.abundD + COOLR.abundc;
     double energy_HII = temp_HII * 1.5 * BOLTZMANN_CGS * yn * (1.0 + ABHE + abe_HII);
+#ifndef TREE_RAY_PI
+    /* When TREE_RAY_PI is on, photoionization is set per-cell from the
+     * transported ion flux (Γ_HI fed to chemistry above) — skip the
+     * subgrid PHOTOION force-ionization. */
     if(CellP[target].Ionized == 1) {
         skip_evolve_abundances = 1;
         abundances[IH2] = 0.0;
@@ -511,6 +550,7 @@ double do_chemcool_step(int target, double dt, double dl, int mode)
 #endif
         if(energy < energy_HII) energy = energy_HII;
     }
+#endif /* TREE_RAY_PI */
 #endif
 
     /* Clamp molecular abundances to zero in fully ionized gas (xH+ > 0.99).

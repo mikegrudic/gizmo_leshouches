@@ -866,13 +866,11 @@ c        print*, "chi_isrf = ", chi_isrf
 c        print*, "yn = ", yn
 c        print*, "field_strength = ", field_strength
 
-#ifdef DIFFUSE_DUST_EMISSION
+#ifdef TREE_RAY_IR
 c
-c This is the heating from the surrounding dust, assuming its optically
-c thin to its own emission (i.e. no column attenuation between emitter and 
-c receiver). The term 'diffuse_dust_heat' is stored in the 'project/PROJECT.' 
-c common block / external structure. It is always there if TREE_RAD is defined
-c and so without #def DIFFUSE_DUST_EMISSION it will contain junk!
+c Heating from IR radiation transported by TREE_RAY from surrounding dust.
+c The term 'diffuse_dust_heat' is populated in chemcool.cc from the
+c per-pixel IR flux delivered by the tree_ray walk.
 c
         isrf_heat = isrf_heat + diffuse_dust_heat
 #endif

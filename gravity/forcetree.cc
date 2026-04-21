@@ -485,8 +485,12 @@ void force_update_node_recursive(int no, int sib, int father)
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
         MyFloat uv_luminosity = 0;
         MyFloat lw_luminosity = 0;
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
         MyFloat nuv_luminosity = 0;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
         MyFloat opt_luminosity = 0;
+#endif
 #endif
 #ifdef TREE_RAY_IR
         MyFloat ir_luminosity = 0;
@@ -584,8 +588,12 @@ void force_update_node_recursive(int no, int sib, int father)
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
                         uv_luminosity += Nodes[p].uv_luminosity;
                         lw_luminosity += Nodes[p].lw_luminosity;
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
                         nuv_luminosity += Nodes[p].nuv_luminosity;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
                         opt_luminosity += Nodes[p].opt_luminosity;
+#endif
 #endif
 #ifdef TREE_RAY_IR
                         ir_luminosity += Nodes[p].ir_luminosity;
@@ -692,7 +700,14 @@ void force_update_node_recursive(int no, int sib, int father)
                     }
 #endif
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
-                    if(pa->Type == 4 || pa->Type == 5) {uv_luminosity += P[p].UV_luminosity; lw_luminosity += P[p].LW_luminosity; nuv_luminosity += P[p].NUV_luminosity; opt_luminosity += P[p].OPT_luminosity;}
+                    if(pa->Type == 4 || pa->Type == 5) {uv_luminosity += P[p].UV_luminosity; lw_luminosity += P[p].LW_luminosity;
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
+                        nuv_luminosity += P[p].NUV_luminosity;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
+                        opt_luminosity += P[p].OPT_luminosity;
+#endif
+                    }
 #endif
 #ifdef TREE_RAY_IR
                     if(pa->Type == 0) {ir_luminosity += P[p].IR_luminosity;}
@@ -900,8 +915,12 @@ void force_update_node_recursive(int no, int sib, int father)
 #ifdef GALSF_RESOLVEDISM_G0_VARIABLE
         Nodes[no].uv_luminosity = uv_luminosity;
         Nodes[no].lw_luminosity = lw_luminosity;
+#ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
         Nodes[no].nuv_luminosity = nuv_luminosity;
+#endif
+#ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
         Nodes[no].opt_luminosity = opt_luminosity;
+#endif
 #endif
 #ifdef TREE_RAY_IR
         Nodes[no].ir_luminosity = ir_luminosity;

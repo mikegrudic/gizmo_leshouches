@@ -1381,6 +1381,23 @@
 #endif
 #endif /* TREE_RAD */
 
+/* ---- TREE_RAY: progressive attenuation in tree walk (implies TREE_RAD + G0_VARIABLE) ---- */
+#ifdef TREE_RAY
+#ifndef TREE_RAD
+#define TREE_RAD
+#endif
+#ifndef GALSF_RESOLVEDISM_G0_VARIABLE
+#define GALSF_RESOLVEDISM_G0_VARIABLE
+#endif
+#endif /* TREE_RAY */
+
+/* ---- TREE_RAY_PI: ionizing radiation in tree walk (implies TREE_RAY) ---- */
+#ifdef TREE_RAY_PI
+#ifndef TREE_RAY
+#define TREE_RAY
+#endif
+#endif /* TREE_RAY_PI */
+
 
 #if defined(COOLING) && defined(GALSF_EFFECTIVE_EQS)
 #ifndef COOLING_OPERATOR_SPLIT

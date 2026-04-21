@@ -250,6 +250,12 @@ extern struct gas_cell_data
 #ifdef GALSF_RESOLVEDISM_OPT_VARIABLE
     MyFloat OPT_flux[NPIX];              /*!< HEALPix optical+NIR flux per pixel, 0.4-3.4 eV */
 #endif
+#ifdef TREE_RAY_IR
+    MyFloat IR_flux[NPIX];               /*!< HEALPix IR flux per pixel from dust emission, attenuated [erg cm^-2 s^-1] */
+#endif
+#ifdef TREE_RAY_PI
+    MyFloat Ion_flux[NPIX];              /*!< HEALPix ionizing flux per pixel, attenuated by neutral H [erg cm^-2 s^-1] */
+#endif
     MyFloat G0;                           /*!< FUV radiation field in Habing units, 8-13.6 eV */
     MyFloat G0_LW;                        /*!< LW radiation field in Habing units, 11.2-13.6 eV */
 #ifdef GALSF_RESOLVEDISM_NUV_VARIABLE
