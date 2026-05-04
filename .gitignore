@@ -17,3 +17,8 @@ test/unit/test_diffusion_co
 test/unit/test_dvode_co
 test/unit/test_dvode_xh_sensitivity
 test/unit/test_enrichment
+
+# Large binary data tables — distribute via FTP/curl, not git
+# (re-introducing these to git permanently bloats .git history)
+galaxy_sf/stellar_tables/*.hdf5
+galaxy_sf/stellar_tables/spectra/atlas9/*.pck
