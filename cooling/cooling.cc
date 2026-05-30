@@ -491,6 +491,69 @@ void cooling_parent_routine(void)
         }
 #endif
 #if defined(GIZMO_POSTCOOL_ORACLE) && (defined(POST_COOLING_DEVICE_EOS_SUPPORTED) || defined(GALSF_ISMDUSTCHEM_MODEL))
+#ifdef GIZMO_POSTCOOL_SPIKE
+        /* SPIKE (to-remove): scan device-post-tail compact_Cell/compact_P for first
+         * non-finite or out-of-bounds cell. oracle_*_scratch still holds the
+         * pre-tail snapshot at this point (host-rerun hasn't run yet). Dump and
+         * abort on first hit so we see exactly which cell + which field went bad. */
+        for(int j = 0; j < batch_n; j++) {
+            const struct particle_data *pp_pre  = &oracle_P_scratch[j];
+            const struct gas_cell_data *cp_pre  = &oracle_Cell_scratch[j];
+            const struct particle_data *pp_post = &compact_P[j];
+            const struct gas_cell_data *cp_post = &compact_Cell[j];
+            int bad = 0; const char *why = "";
+            if(!isfinite(cp_post->Pressure))           { bad=1; why="Pressure non-finite"; }
+            else if(cp_post->Pressure < 0)                  { bad=1; why="Pressure < 0"; }
+            else if(!isfinite(cp_post->Density))       { bad=1; why="Density non-finite"; }
+            else if(cp_post->Density <= 0)                  { bad=1; why="Density <= 0"; }
+            else if(!isfinite(cp_post->InternalEnergy)){ bad=1; why="InternalEnergy non-finite"; }
+            else if(cp_post->InternalEnergy <= 0)           { bad=1; why="InternalEnergy <= 0"; }
+#ifdef EOS_GENERAL
+            else if(!isfinite(cp_post->SoundSpeed))    { bad=1; why="SoundSpeed non-finite"; }
+            else if(cp_post->SoundSpeed < 0)                { bad=1; why="SoundSpeed < 0"; }
+#endif
+#if defined(GALSF_ISMDUSTCHEM_MODEL)
+            for(int k=0; !bad && k<NUM_ISMDUSTCHEM_ELEMENTS; k++) {
+                if(!isfinite(cp_post->ISMDustChem_Dust_Metal[k]))   { bad=1; why="Dust_Metal non-finite"; }
+                else if(cp_post->ISMDustChem_Dust_Metal[k] < 0 || cp_post->ISMDustChem_Dust_Metal[k] > 1.0) { bad=1; why="Dust_Metal out of [0,1]"; }
+            }
+            for(int k=0; !bad && k<NUM_ISMDUSTCHEM_SPECIES; k++) {
+                if(!isfinite(cp_post->ISMDustChem_Dust_Species[k])) { bad=1; why="Dust_Species non-finite"; }
+                else if(cp_post->ISMDustChem_Dust_Species[k] < 0 || cp_post->ISMDustChem_Dust_Species[k] > 1.0) { bad=1; why="Dust_Species out of [0,1]"; }
+            }
+            for(int k=0; !bad && k<NUM_ISMDUSTCHEM_SOURCES; k++) {
+                if(!isfinite(cp_post->ISMDustChem_Dust_Source[k]))  { bad=1; why="Dust_Source non-finite"; }
+            }
+#endif
+            if(bad) {
+                printf("[SPIKE] rank=%d batch_start=%d j=%d ID=%llu Type=%d dtime=%.6e Mass=%.6e -- BAD: %s\n",
+                       ThisTask, batch_start, j, (unsigned long long)pp_post->ID, pp_post->Type, compact_dtime[j], cp_post->Mass, why);
+                printf("[SPIKE]   PRE-tail:  Pressure=%.6e Density=%.6e InternalEnergy=%.6e",
+                       cp_pre->Pressure, cp_pre->Density, cp_pre->InternalEnergy);
+#ifdef EOS_GENERAL
+                printf(" SoundSpeed=%.6e Gamma=%.6e Temp=%.6e", cp_pre->SoundSpeed, cp_pre->Gamma, cp_pre->Temperature);
+#endif
+                printf("\n[SPIKE]   POST-tail: Pressure=%.6e Density=%.6e InternalEnergy=%.6e",
+                       cp_post->Pressure, cp_post->Density, cp_post->InternalEnergy);
+#ifdef EOS_GENERAL
+                printf(" SoundSpeed=%.6e Gamma=%.6e Temp=%.6e", cp_post->SoundSpeed, cp_post->Gamma, cp_post->Temperature);
+#endif
+                printf("\n");
+#if defined(GALSF_ISMDUSTCHEM_MODEL)
+                printf("[SPIKE]   PRE  Dust_Metal: ");   for(int k=0;k<NUM_ISMDUSTCHEM_ELEMENTS;k++) printf("%.3e ", cp_pre->ISMDustChem_Dust_Metal[k]);   printf("\n");
+                printf("[SPIKE]   POST Dust_Metal: ");   for(int k=0;k<NUM_ISMDUSTCHEM_ELEMENTS;k++) printf("%.3e ", cp_post->ISMDustChem_Dust_Metal[k]);  printf("\n");
+                printf("[SPIKE]   PRE  Dust_Species: "); for(int k=0;k<NUM_ISMDUSTCHEM_SPECIES;k++)  printf("%.3e ", cp_pre->ISMDustChem_Dust_Species[k]); printf("\n");
+                printf("[SPIKE]   POST Dust_Species: "); for(int k=0;k<NUM_ISMDUSTCHEM_SPECIES;k++)  printf("%.3e ", cp_post->ISMDustChem_Dust_Species[k]);printf("\n");
+                printf("[SPIKE]   PRE  Dust_Source: ");  for(int k=0;k<NUM_ISMDUSTCHEM_SOURCES;k++)  printf("%.3e ", cp_pre->ISMDustChem_Dust_Source[k]);  printf("\n");
+                printf("[SPIKE]   POST Dust_Source: ");  for(int k=0;k<NUM_ISMDUSTCHEM_SOURCES;k++)  printf("%.3e ", cp_post->ISMDustChem_Dust_Source[k]); printf("\n");
+#endif
+                printf("[SPIKE]   Pos=(%.6e,%.6e,%.6e) Vel=(%.6e,%.6e,%.6e)\n",
+                       pp_post->Pos[0],pp_post->Pos[1],pp_post->Pos[2], pp_post->Vel[0],pp_post->Vel[1],pp_post->Vel[2]);
+                fflush(stdout);
+                MPI_Abort(MPI_COMM_WORLD, 42);
+            }
+        }
+#endif /* GIZMO_POSTCOOL_SPIKE */
         /* ORACLE: re-run the public host wrapper(s) on the scratch arrays.
          * Match the device kernel's gate structure (codex Phase 2 chunk 2 rule
          * "oracle covers the whole tail, not just EOS"): set_eos_pressure runs
@@ -508,6 +571,45 @@ void cooling_parent_routine(void)
             }
 #endif
         }
+#ifdef GIZMO_POSTCOOL_SPIKE
+        /* SPIKE (to-remove): same pathology scan on the HOST-rerun output.
+         * If this fires too -> host physics produces the bad state, not a
+         * CUDA divergence. If only the device scan fires -> device kernel is
+         * the actual divergence source. */
+        for(int j = 0; j < batch_n; j++) {
+            const struct gas_cell_data *cp_h = &oracle_Cell_scratch[j];
+            int bad = 0; const char *why = "";
+            if(!isfinite(cp_h->Pressure))           { bad=1; why="Pressure non-finite"; }
+            else if(cp_h->Pressure < 0)                  { bad=1; why="Pressure < 0"; }
+            else if(!isfinite(cp_h->InternalEnergy)){ bad=1; why="InternalEnergy non-finite"; }
+            else if(cp_h->InternalEnergy <= 0)           { bad=1; why="InternalEnergy <= 0"; }
+#if defined(GALSF_ISMDUSTCHEM_MODEL)
+            for(int k=0; !bad && k<NUM_ISMDUSTCHEM_ELEMENTS; k++) {
+                if(!isfinite(cp_h->ISMDustChem_Dust_Metal[k]))   { bad=1; why="Dust_Metal non-finite"; }
+                else if(cp_h->ISMDustChem_Dust_Metal[k] < 0 || cp_h->ISMDustChem_Dust_Metal[k] > 1.0) { bad=1; why="Dust_Metal out of [0,1]"; }
+            }
+            for(int k=0; !bad && k<NUM_ISMDUSTCHEM_SPECIES; k++) {
+                if(!isfinite(cp_h->ISMDustChem_Dust_Species[k])) { bad=1; why="Dust_Species non-finite"; }
+                else if(cp_h->ISMDustChem_Dust_Species[k] < 0 || cp_h->ISMDustChem_Dust_Species[k] > 1.0) { bad=1; why="Dust_Species out of [0,1]"; }
+            }
+#endif
+            if(bad) {
+                printf("[SPIKE-HOST] rank=%d batch_start=%d j=%d ID=%llu Type=%d dtime=%.6e Mass=%.6e -- BAD: %s\n",
+                       ThisTask, batch_start, j, (unsigned long long)oracle_P_scratch[j].ID, oracle_P_scratch[j].Type, compact_dtime[j], cp_h->Mass, why);
+                printf("[SPIKE-HOST]   HOST-rerun: Pressure=%.6e InternalEnergy=%.6e", cp_h->Pressure, cp_h->InternalEnergy);
+#ifdef EOS_GENERAL
+                printf(" SoundSpeed=%.6e Gamma=%.6e Temp=%.6e", cp_h->SoundSpeed, cp_h->Gamma, cp_h->Temperature);
+#endif
+                printf("\n");
+#if defined(GALSF_ISMDUSTCHEM_MODEL)
+                printf("[SPIKE-HOST]   HOST Dust_Metal: ");   for(int k=0;k<NUM_ISMDUSTCHEM_ELEMENTS;k++) printf("%.3e ", cp_h->ISMDustChem_Dust_Metal[k]);   printf("\n");
+                printf("[SPIKE-HOST]   HOST Dust_Species: "); for(int k=0;k<NUM_ISMDUSTCHEM_SPECIES;k++)  printf("%.3e ", cp_h->ISMDustChem_Dust_Species[k]); printf("\n");
+#endif
+                fflush(stdout);
+                MPI_Abort(MPI_COMM_WORLD, 43);
+            }
+        }
+#endif /* GIZMO_POSTCOOL_SPIKE */
         /* Diff every field the post_cooling_tail kernel can write -- EOS
          * scalars, dust scalars + arrays, molecfrac scalars, DelayTimeHII --
          * accumulating bounded per-class max-rel summaries plus a global
