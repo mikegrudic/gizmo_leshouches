@@ -192,7 +192,7 @@ def run_test(test_name: str, num_mpi_ranks: int = 1, num_openmp_threads: int = 0
     environ.setdefault("MKL_NUM_THREADS", "1")
     paramsfile = f"{test_name}.params"
     if environ.get("SLURM_JOB_ID"):
-        cmd = ["srun", "-n", str(num_mpi_ranks), "--cpu-bind=none"]
+        cmd = ["srun", "--mpi=pmix_v5", "-n", str(num_mpi_ranks), "--cpu-bind=none"]
     else:
         cmd = ["mpirun", "-np", str(num_mpi_ranks), "--use-hwthread-cpus", "--oversubscribe"]
     if num_openmp_threads > 0 and not environ.get("SLURM_JOB_ID"):
