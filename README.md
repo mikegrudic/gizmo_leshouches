@@ -1,5 +1,7 @@
 # Stellar Feedback Experiments with GIZMO
 
+![HII region simulation](images/Rad_Cool.gif)
+
 ## What is GIZMO?
 
 `GIZMO` is a multi-physics, multi-method radiation MHD code for astrophysics that is designed mainly around a set of mesh-free weighted-partition finite-volume methods. These methods essentially generalize the way a Voronoi tesselation moving-mesh code solves conservation laws through exchange of fluxes across the moving faces between domains (as in e.g. [Arepo](https://arepo-code.org/wp-content/userguide/index.html)). Think of it like a moving mesh, but where each point in space is assigned only a certain *weight* associated with each neighboring mesh-generating point. The discretization looks like a Voronoi tesselation with blurred boundaries.
@@ -7,6 +9,7 @@
 [**It's not SPH**](https://starforge-tools.readthedocs.io/en/latest/data.html#what-is-a-gas-cell-in-a-gizmo-mfm-mfv-simulation). A kernel spline function is involved, and there are many structural similarities between the algorithms used by GIZMO and SPH codes, but the method for solving conservation laws is fundamentally distinct. It is best to think of the discrete simulation elements as finite-volume "cells", not particles. However, the terms are often used interchangeably.
 
 For us, the important thing is that `GIZMO` implements a wide variety of stellar feedback processes including protostellar jets, stellar winds, radiation, and supernovae, as well as the key ISM chemical and thermal processes that determine the impact that stellar feedback has. We will use `GIZMO` as a laboratory to experiment with stellar feedback.
+
 
 ## Setting up your GIZMO stack
 
@@ -137,7 +140,7 @@ The additional flags in the `srun` command were needed to get hybrid mode to wor
 
 The basic procedure for interfacing with the data is demonstrated above for the soundwave test, but there are many tools to help make various maps of the fluid quantities. Just a few examples are:
 
-* The [meshoid](https://github.com/mikegrudic/CrunchSnaps) package provides the basic low-level projection and slicing operations that you can use to generate maps, to further  in whichever backend you choose.
+* The [meshoid](https://github.com/mikegrudic/meshoid) package provides the basic low-level projection and slicing operations that you can use to generate maps, to further  in whichever backend you choose.
 * Building on top of meshoid, the [CrunchSnaps](https://github.com/mikegrudic/CrunchSnaps) package includes the powerful [SinkVis2 command-line tool](https://crunchsnaps.readthedocs.io/en/latest/sinkvis2.html) and python API for making slice and projection maps of the data. It can be called from the command line or from inside a notebook.
 * GIZMO is supported by the very popular simulation analysis package [`yt`](https://yt-project.org/). If you are already familiar with `yt` then.
 * [vizmo](https://github.com/mikegrudic/vizmo) provides interactive, real-time 3D fly-through exploration of simulation data, including GIZMO. New, experimental, vibecoded slop, have fun!
