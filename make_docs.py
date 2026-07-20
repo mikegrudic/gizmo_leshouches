@@ -68,15 +68,14 @@ PAGE_TITLES = {
     "experiments": "Experiments",
 }
 
-def promote_headings(text):
-    """Promote all markdown headings by one level (## → #, ### → ##, etc.)."""
-    return re.sub(r'^(#{2,})', lambda m: m.group(1)[1:], text, flags=re.MULTILINE)
-
 # --- write content pages ---
+# Each page gets one H1 title; section headings stay at ## so Sphinx sees a
+# clean single-title-per-page structure and renders the sidebar consistently.
 for slug, heading_list in PAGES.items():
     content = "\n".join(sections[h] for h in heading_list if h in sections)
+    page_title = f"# {PAGE_TITLES[slug]}\n\n"
     with open(os.path.join(DOCS, f"{slug}.md"), "w") as f:
-        f.write(promote_headings(content))
+        f.write(page_title + content)
 
 # --- write index ---
 toctree = """\

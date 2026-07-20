@@ -1,4 +1,6 @@
-# Running test problems
+# Running Simulations
+
+## Running test problems
 
 GIZMO has an automatic testing system. A host of test problems can be found in `tests/`, which can be run with pytest. For example, the most basic test for a linear soundwave can be run with 
 
@@ -6,7 +8,7 @@ GIZMO has an automatic testing system. A host of test problems can be found in `
 
 and the simulation output snapshots will be placed in `test/soundwave/output`. At minimum, pytest will tell you whether or not the test passed. Many tests also generate informative diagnostic plots. It's always a good idea to run a few of these just to make sure GIZMO is working OK on your system.
 
-## Plotting the output
+### Plotting the output
 See also: [Interfacing with GIZMO HDF5 outputs](https://starforge-tools.readthedocs.io/en/latest/wiki_pages/interfacing_with_gizmo_starforge_hdf5_outputs.html)
 
 If we wanted to make our own plots, the simplest way is by directly interfacing with the snapshot data with `h5py`:
@@ -37,7 +39,7 @@ Note the hierarchical structure of the snapshots: "particle" type at the top lev
 
 
 
-# Setting up an ISM cloud 
+## Setting up an ISM cloud 
 
 [`MakeCloud`](github.com/mikegrudic/MakeCloud/) is a tool for setting up the initial conditions for idealized GMC or ISM cloud simulations. It has many different options with certain convenient defaults.  Run `MakeCloud -h` to get a rundown of all of the different options. By default, MakeCloud assumes God's system of units for dealing with objects on the scale of GMCs and star clusters: $M_\odot$, $\rm km\,s^{-1}$, $\rm pc$, and $\rm G$. The resulting time unit is $T = \rm pc / (km\,s^{-1}) \approx 1 \rm Myr$. Nice, right?
 
@@ -45,7 +47,7 @@ An important thing to note when setting up GIZMO simulations is that, typically,
 
 `MakeCloud` will generate the HDF5 initial conditions file for the cloud, as well as a parameter file with some sensible defaults. Note that if you want a static cloud you must pass `--alpha_turb=0`, otherwise the cloud will be initialized with random turbulent velocities.
 
-## Running the simulation
+### Running the simulation
 
 The basic command to run `GIZMO` on one core is `./GIZMO params.txt 0`. The parameters file specifies where the initial conditions file can be found. The latter `0` flag indicates that we want to start a brand-new simulation, as opposed to restarting from a set of restartfiles (`1`) or from a snapshot (`2`).
 
