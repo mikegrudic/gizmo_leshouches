@@ -4,7 +4,7 @@
 
 ## What is GIZMO?
 
-`GIZMO` is a multi-physics, multi-method radiation MHD code for astrophysics that is designed mainly around a set of mesh-free weighted-partition finite-volume methods. These methods essentially generalize the way a Voronoi tesselation moving-mesh code solves conservation laws through exchange of fluxes across the moving faces between domains (as in e.g. [Arepo](https://arepo-code.org/wp-content/userguide/index.html)). Think of it like a moving mesh, but where each point in space is assigned only a certain *weight* associated with each neighboring mesh-generating point. The discretization looks like a Voronoi tesselation with blurred boundaries.
+`GIZMO` is a multi-physics, multi-method radiation MHD code for astrophysics that is designed mainly around a set of mesh-free weighted-partition finite-volume methods. These methods essentially generalize the way a Voronoi tessellation moving-mesh code solves conservation laws through exchange of fluxes across the moving faces between domains (as in e.g. [Arepo](https://arepo-code.org/wp-content/userguide/index.html)). Think of it like a moving mesh, but where each point in space is assigned only a certain *weight* associated with each neighboring mesh-generating point. The discretization looks like a Voronoi tessellation with blurred boundaries.
 
 [**It's not SPH**](https://starforge-tools.readthedocs.io/en/latest/data.html#what-is-a-gas-cell-in-a-gizmo-mfm-mfv-simulation). A kernel spline function is involved, and there are many structural similarities between the algorithms used by GIZMO and SPH codes, but the method for solving conservation laws is fundamentally distinct. It is best to think of the discrete simulation elements as finite-volume "cells", not particles. However, the terms are often used interchangeably.
 
@@ -59,7 +59,7 @@ Note that `SINGLE_STAR_STARFORGE_DEFAULTS` enables a whole host of modules for t
 ### Config flags for different feedback mechanisms
 
 * Radiation: to enable the full, 5-band radiative transfer treatment, enable `SINGLE_STAR_FB_RAD`. This will account for photons in the EUV (i.e. H-ionizing), FUV, NUV, Optical/Near-IR, and far-IR bands. To get more granular control over which radiation bands you include, see e.g. `test/HII_region/Config.sh`. Another important parameter is the speed-of-light-reduction factor, which allows us to take larger timesteps by slowing down light. A good setting to start with is `RT_SPEEDOFLIGHT_REDUCTION=1e-4`, which sets it to $30 \rm km\,s^{-1}$: very slow, but fast enough to get HII region dynamics mostly right. To disable radiation pressure and isolated the pure effects of thermal gas pressure in your HII region, you can use `RT_DISABLE_RAD_PRESSURE`.
-* Winds: `SINGLE_STAR_FB_WINDS=2` is the default setting. The value is a bitflag: the least-significant bit toggles whether the Vink 2001 mass-loss prescription is used, otherwise the weaker STARFORGE prescription is used. The next-to-least significant bit toggles whether to use the more-powerful Sabhahit 2022 prescription for very massive stars. The default `2` setting combines the STARFORGE prescription and the Sahahit prescription (taking the larger of two $\dot{M}$'s).
+* Winds: `SINGLE_STAR_FB_WINDS=2` is the default setting. The value is a bitflag: the least-significant bit toggles whether the Vink 2001 mass-loss prescription is used, otherwise the weaker STARFORGE prescription is used. The next-to-least significant bit toggles whether to use the more-powerful Sabhahit 2022 prescription for very massive stars. The default `2` setting combines the STARFORGE prescription and the Sabhahit prescription (taking the larger of two $\dot{M}$'s).
 * Supernovae: `SINGLE_STAR_FB_SNE` makes stars explode in a $10^51 \rm erg$ supernova at the end of their lifetime. Note that you will need to initialize the star's age appropriately if you want a SN to go off at the beginning of your simulation.
 
 
@@ -98,7 +98,7 @@ plt.scatter(x[:,0],rho)
     
 ![png](images/output_0_1.png)
 
-Note the hierarchical structure of the snapshots: "particle" type at the top level, with each particle type having a set of attributes. For full documentation of the data fields see the GIZMO docs, but some specific fields we may encounter in star formation setups are described in detail in the [starforge documentation]()
+Note the hierarchical structure of the snapshots: "particle" type at the top level, with each particle type having a set of attributes. For full documentation of the data fields see the GIZMO docs, but some specific fields we may encounter in star formation setups are described in detail in the [starforge documentation](https://starforge-tools.readthedocs.io/en/latest/).
 
 
 ## Setting up an ISM cloud 
@@ -140,12 +140,12 @@ The additional flags in the `srun` command were needed to get hybrid mode to wor
 
 The basic procedure for interfacing with the data is demonstrated above for the soundwave test, but there are many tools to help make various maps of the fluid quantities. Just a few examples are:
 
-* The [meshoid](https://github.com/mikegrudic/meshoid) package provides the basic low-level projection and slicing operations that you can use to generate maps, to further  in whichever backend you choose.
+* The [meshoid](https://github.com/mikegrudic/meshoid) package provides the basic low-level projection and slicing operations that you can use to generate maps, to further use in whichever plotting backend you choose (e.g. `pcolormap`).
 * Building on top of meshoid, the [CrunchSnaps](https://github.com/mikegrudic/CrunchSnaps) package includes the powerful [SinkVis2 command-line tool](https://crunchsnaps.readthedocs.io/en/latest/sinkvis2.html) and python API for making slice and projection maps of the data. It can be called from the command line or from inside a notebook.
 ![png](images/Slice_Temperature_00090_0000_forward.png)
 *Example of a temperature slice plot made by `SinkVis2`*
 
-* GIZMO is supported by the very popular simulation analysis package [`yt`](https://yt-project.org/). If you are already familiar with `yt` then.
+* GIZMO is supported by the very popular simulation analysis package [`yt`](https://yt-project.org/). If you are already familiar with `yt` then this is probably the path of least resistance!
 * [vizmo](https://github.com/mikegrudic/vizmo) provides interactive, real-time 3D fly-through exploration of simulation data, including GIZMO. New, experimental, vibecoded slop, have fun!
 * Other visualization tools are mentioned in the [gizmo documentation](http://www.tapir.caltech.edu/~phopkins/Site/GIZMO_files/gizmo_documentation.html).
 
