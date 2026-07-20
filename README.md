@@ -35,7 +35,12 @@ The paths to these libraries must be known by the build system. This is set up f
 
 This is a branch of GIZMO managed for the purposes of this workshop.
 
+Some other things you will probably want:
 ``git clone https://github.com/mikegrudic/MakeCloud``
+``git clone https://github.com/mikegrudic/meshoid``
+``git clone https://github.com/mikegrudic/CrunchSnaps``
+
+All of these (including the GIZMO repo) are installable as python packages using pip.
 
 ## Building GIZMO
 
