@@ -79,3 +79,9 @@ How does your solution change when you switch the numerical solver? What is robu
 We haven't mentioned these yet because they require simulations with on-the-fly star formation, but protostellar jets can also be an important process for regulating the formation of individual stars and the state of turbulent gas in protostellar clusters.
 
 Run a low-mass cloud/clump at a mass resolution at least as fine as $10^{-2}M_\odot$ (to resolve at least some of the IMF) with self-gravity, and compare the baseline run with a run that enables `SINGLE_STAR_FB_JETS`. What do the jets do to the properties of the cloud? The rate of star formation? The mass distribution of stars?
+
+### Code comparison
+
+You are already an expert at using RAMSES. Is there a setup that you can run with both RAMSES and GIZMO with the same parameters and initial conditions? Run it with both codes and see how the solutions differ: I guarantee to you that they will!
+
+Note that `yt` is a great analysis tool for this thanks to its multi-code support. For an example of a highly successful code comparison project see [https://sites.google.com/site/santacruzcomparisonproject/](AGORA).

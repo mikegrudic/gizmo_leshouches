@@ -10,7 +10,18 @@
 
 [**It's not SPH**](https://starforge-tools.readthedocs.io/en/latest/data.html#what-is-a-gas-cell-in-a-gizmo-mfm-mfv-simulation). A kernel spline function is involved, and there are many structural similarities between the algorithms used by GIZMO and SPH codes, but the method for solving conservation laws is fundamentally distinct. It is best to think of the discrete simulation elements as finite-volume "cells", not particles. However, the terms are often used interchangeably.
 
-For us, the important thing is that these methods are often advantageous for star formation problems, and `GIZMO` implements a wide variety of stellar feedback processes including protostellar jets, stellar winds, radiation, and supernovae, as well as the key ISM chemical and thermal processes that determine the impact that stellar feedback has. [Here](https://youtu.be/LeX5e51UkzI) is an example of a star formation calculation carried out with GIZMO. We will use `GIZMO` as a laboratory to experiment with stellar feedback.
+## Why GIZMO?
+
+For us, the important thing is that **the numerical methods that GIZMO implements are often advantageous for star and galaxy formation problems**. One major advantage of is that the the resolution elements follow the flow of the fluid makes the operation of advection much less **diffusive** than Eulerian simulations (e.g. RAMSES, ATHENA, FLASH). This allows structures formed in supersonic flows to be generally better-preserved, and a lesser degree of resolution is often required to converge on certain properties of the flow: you can often do less with more.
+
+![png](images/ramses_sph_mfm_comparison.png)
+*Comparison of an isothermal galaxy disk simulated with RAMSES AMR, SPH, and GIZMO's MFM and MFV methods at comparable resolution. Note the finer structure that is preserved by the Lagrangian methods.*
+
+The trade-off is that mesh-free codes will typically be intrinsically slower than grid codes if the timesteps and numerical resolution are the same: the necessity of neighbor searching and tree traversals tends to make the computation more limited by moving data around than actual FLOPS. For the same reason it's also much harder to put on a GPU!
+
+Another tradeoff is that you do not have the same freedom to arbitrarily specify your spatial resolution:
+
+`GIZMO` also implements a wide variety of stellar feedback processes including protostellar jets, stellar winds, radiation, and supernovae, as well as the key ISM chemical and thermal processes that determine the impact that stellar feedback has. [Here](https://youtu.be/LeX5e51UkzI) is an example of a star formation calculation carried out with GIZMO. We will use `GIZMO` as a laboratory to experiment with stellar feedback.
 
 
 ## Setting up your GIZMO stack
@@ -234,3 +245,9 @@ How does your solution change when you switch the numerical solver? What is robu
 We haven't mentioned these yet because they require simulations with on-the-fly star formation, but protostellar jets can also be an important process for regulating the formation of individual stars and the state of turbulent gas in protostellar clusters.
 
 Run a low-mass cloud/clump at a mass resolution at least as fine as $10^{-2}M_\odot$ (to resolve at least some of the IMF) with self-gravity, and compare the baseline run with a run that enables `SINGLE_STAR_FB_JETS`. What do the jets do to the properties of the cloud? The rate of star formation? The mass distribution of stars?
+
+### Code comparison
+
+You are already an expert at using RAMSES. Is there a setup that you can run with both RAMSES and GIZMO with the same parameters and initial conditions? Run it with both codes and see how the solutions differ: I guarantee to you that they will!
+
+Note that `yt` is a great analysis tool for this thanks to its multi-code support. For an example of a highly successful code comparison project see [https://sites.google.com/site/santacruzcomparisonproject/](AGORA).

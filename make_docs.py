@@ -82,20 +82,28 @@ for slug, heading_list in PAGES.items():
     with open(os.path.join(DOCS, f"{slug}.md"), "w") as f:
         f.write(content)
 
+# --- write "What is GIZMO?" as its own page ---
+gizmo_section = sections.get("What is GIZMO?", "")
+if gizmo_section:
+    content = re.sub(r'^(#{2,})', lambda m: m.group(1)[1:], gizmo_section, flags=re.MULTILINE)
+    with open(os.path.join(DOCS, "what_is_gizmo.md"), "w") as f:
+        f.write(content)
+
 # --- write index ---
 toctree = """\
 ```{toctree}
 :maxdepth: 2
 :caption: Contents
 
+what_is_gizmo
 setup
 running
 visualization
 experiments
 ```
 """
-# preamble has the title + gif + "What is GIZMO?" block
-index_content = preamble + sections.get("What is GIZMO?", "") + "\n\n" + toctree
+# preamble has only the title + gif now
+index_content = preamble + toctree
 with open(os.path.join(DOCS, "index.md"), "w") as f:
     f.write(index_content)
 
