@@ -35,10 +35,10 @@ void do_first_halfstep_kick(void)
         apply_long_range_kick(tstart, tend);
     }
 #endif
+#ifdef HYDRO_MESHLESS_FINITE_VOLUME
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(ti_step, tstart, tend)
 #endif
-#ifdef HYDRO_MESHLESS_FINITE_VOLUME
     /* as currently written with some revisions to MFV methods, should only update on active timesteps */
     for(i = 0; i < NumPart; i++)
     {
@@ -72,10 +72,10 @@ void do_second_halfstep_kick(void)
         apply_long_range_kick(tstart, tend);
     }
 #endif
+#ifdef HYDRO_MESHLESS_FINITE_VOLUME
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(ti_step, tstart, tend)
 #endif
-#ifdef HYDRO_MESHLESS_FINITE_VOLUME
     for(i = 0; i < NumPart; i++)
     {
         if((TimeBinActive[P[i].TimeBin]) || (P[i].Type==0)) /* active OR gas, need to check each timestep to ensure manifest conservation */
