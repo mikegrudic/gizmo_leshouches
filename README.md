@@ -58,7 +58,7 @@ Note that `SINGLE_STAR_STARFORGE_DEFAULTS` enables a whole host of modules for t
 
 ### Config flags for different feedback mechanisms
 
-* Radiation: to enable the full, 5-band radiative transfer treatment, enable `SINGLE_STAR_FB_RAD`. This will account for photons in the EUV (i.e. H-ionizing), FUV, NUV, Optical/Near-IR, and far-IR bands. To get more granular control over which radiation bands you include, see e.g. `test/HII_region/Config.sh`. Another important parameter is the speed-of-light-reduction factor, which allows us to take larger timesteps by slowing down light. A good setting to start with is `RT_SPEEDOFLIGHT_
+* Radiation: to enable the full, 5-band radiative transfer treatment, enable `SINGLE_STAR_FB_RAD`. This will account for photons in the EUV (i.e. H-ionizing), FUV, NUV, Optical/Near-IR, and far-IR bands. To get more granular control over which radiation bands you include, see e.g. `test/HII_region/Config.sh`. Another important parameter is the speed-of-light-reduction factor, which allows us to take larger timesteps by slowing down light. A good setting to start with is `RT_SPEEDOFLIGHT_REDUCTION=1e-4`, which sets it to $30 \rm km\,s^{-1}$: very slow, but fast enough to get HII region dynamics mostly right. To disable radiation pressure and isolated the pure effects of thermal gas pressure in your HII region, you can use `RT_DISABLE_RAD_PRESSURE`.
 * Winds: `SINGLE_STAR_FB_WINDS=2` is the default setting. The value is a bitflag: the least-significant bit toggles whether the Vink 2001 mass-loss prescription is used, otherwise the weaker STARFORGE prescription is used. The next-to-least significant bit toggles whether to use the more-powerful Sabhahit 2022 prescription for very massive stars. The default `2` setting combines the STARFORGE prescription and the Sahahit prescription (taking the larger of two $\dot{M}$'s).
 * Supernovae: `SINGLE_STAR_FB_SNE` makes stars explode in a $10^51 \rm erg$ supernova at the end of their lifetime. Note that you will need to initialize the star's age appropriately if you want a SN to go off at the beginning of your simulation.
 
@@ -157,7 +157,7 @@ Some good quantities to plot are:
 - The bubble shell radius versus time.
 - Total radial momentum versus time.
 - Total cooling rate (make sure to include the `OUTPUT_COOLRATE_DETAIL` flag in your Config.sh).
-- Mass in different phases.
+- Mass in different temperature/density phases versus time.
 - Radial temperature structure at different times.
 - Surface density maps: does the bubble remain spherical? If not, what structures develop?
 
@@ -181,13 +181,15 @@ The first-order difference between our uniform-density cloud model and reality i
 #### Initializing turbulence
 To add turbulent density structure to the simulation, we must do an initialization run. We can *initialize* the turbulent velocities by-hand and run the simulation to allow the density structure to develop, just by setting `--alpha_turb` > 0 in `MakeCloud`. 
 
-Alternately or complementarily, we can *drive* the turbulence continuously by enabling `TURB_DRIVING`, whose parameters are controlled in the parameters file. The default parameters written by `MakeCloud` are sensible for implementing the "TURBSPHERE" setup described in [Lane et al. 2022](https://academic.oup.com/mnras/article/510/4/4767/6482854), which gives you an isolated, localized cloud embedded in a diffuse box. This is more realistic than a simple periodic box setup (also available via `--makebox`) for feedback experiments because the low-density boundary conditions can allow the pressurized gas to vent out of the cloud, changing the dynamics. To get the artificial potential that confines the cloud to the center of the box, enable `STARFORGE_GMC_TURBINIT=1`. Then, run for a few crossing times until a statistical steady state has been achieved. A good plot to check is the gas half-mass radius versus time during the stirring phase.
+Alternately or complementarily, we can *drive* the turbulence continuously by enabling `TURB_DRIVING`, whose parameters are controlled in the parameters file. The default parameters written by `MakeCloud` are sensible for implementing the "TURBSPHERE" setup described in [Lane et al. 2022](https://academic.oup.com/mnras/article/510/4/4767/6482854), which gives you an isolated, localized cloud embedded in a diffuse box. This is more realistic than a simple periodic box setup (also available via `--makebox`) for feedback experiments because the low-density boundary conditions can allow the pressurized gas to vent out of the cloud, changing the dynamics. To get the artificial potential that confines the cloud to the center of the box, enable `STARFORGE_GMC_TURBINIT=1`. Then, run for a few crossing times until a statistical steady state has been achieved. A good plot to check is the gas half-mass radius versus time during the stirring phase. 
+
+You may have to tune `TurbDrive_ApproxRMSVturb` to get the level of turbulence you want: make sure it looks good at low resolution before committing to a high-resolution stirring run. The steady-state RMS velocity dispersion should scale roughly proportionally to this driving parameter, but there is a calibration factor that varies by setup.
 
 Once the stirring is complete, you can use the final snapshot of the stirring run as the initial condition of your feedback run - just remember to disable `STARFORGE_GMC_TURBINIT` for the feedback setup.
 
 ### Magnetic Fields
 
-Enabling `MAGNETIC` will build GIZMO with MHD enabled. Magnetic pressure and tension can affect the way feedback bubbles evolve in various ways, notably by pressure-confining the expansion (e.g. Krumholz 2006), or stabilizing phase interfaces and suppressing energy transport through mixing (e.g. Lancaster 2024).
+Enabling `MAGNETIC` will build GIZMO with MHD enabled. Magnetic pressure and tension can affect the way feedback bubbles evolve in various ways, notably by pressure-confining the expansion (e.g. Krumholz 2006, Kim & Ostriker 2014), or stabilizing phase interfaces and suppressing energy transport through mixing (e.g. Lancaster 2024).
 
 ### Conduction
 
