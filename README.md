@@ -29,7 +29,7 @@ To use the FFT-based gravity solver you also need `FFTW3`, but it is not require
 The paths to these libraries must be known by the build system. This is set up for a variety of pre-set system configurations in `Makefile` (including common setups like a Macbook with Homebrew packages (`MacBookCellar`), and PSMN).
 
 
-## Getting the code
+### Getting the code
 
 ``git clone https://github.com/mikegrudic/gizmo_leshouches``
 
@@ -42,7 +42,7 @@ Some other things you will probably want:
 
 All of these (including the GIZMO repo) are installable as python packages using pip.
 
-## Building GIZMO
+### Building GIZMO
 
 GIZMO's build system works as follows:
 
@@ -116,7 +116,7 @@ An important thing to note when setting up GIZMO simulations is that, typically,
 
 `MakeCloud` will generate the HDF5 initial conditions file for the cloud, as well as a parameter file with some sensible defaults. Note that if you want a static cloud you must pass `--alpha_turb=0`, otherwise the cloud will be initialized with random turbulent velocities.
 
-## Running the simulation
+### Running the simulation
 
 The basic command to run `GIZMO` on one core is `./GIZMO params.txt 0`. The parameters file specifies where the initial conditions file can be found. The latter `0` flag indicates that we want to start a brand-new simulation, as opposed to restarting from a set of restartfiles (`1`) or from a snapshot (`2`).
 
@@ -143,7 +143,7 @@ srun --mpi=pmix_v5 --cpu-bind=none "$GIZMO" "$PARAMS" 0
 
 The additional flags in the `srun` command were needed to get hybrid mode to work but may not be necessary for pure MPI...
 
-## Visualizing the output
+## Visualization
 
 The basic procedure for interfacing with the data is demonstrated above for the soundwave test, but there are many tools to help make various maps of the fluid quantities. Just a few examples are:
 
@@ -158,7 +158,7 @@ The basic procedure for interfacing with the data is demonstrated above for the 
 
 ## Baseline experiments
 
-To start, try to obtain 3 basic solutions for a **stellar wind bubble**, an **HII region** with only radiative feedback, and a **supernova remnant** in a uniform-density medium. For each of these, try at least 3 different numerical resolutions and assess the numerical convergence.
+To start, try to obtain 3 basic solutions for a **stellar wind bubble**, an **HII region** with only radiative feedback, and a **supernova remnant** in a uniform-density medium. For each of these, try at least 3 different numerical resolutions and assess the numerical convergence. Remember: if the result changes in some clear systematic way with resolution, the simulations could give you any answer at all, making them at best difficult to interpret, and at worst useless.
 
 Some good quantities to plot are:
 - Kinetic, thermal, and magnetic (if applicable) energies

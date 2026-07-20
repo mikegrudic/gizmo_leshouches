@@ -45,8 +45,7 @@ An important thing to note when setting up GIZMO simulations is that, typically,
 
 `MakeCloud` will generate the HDF5 initial conditions file for the cloud, as well as a parameter file with some sensible defaults. Note that if you want a static cloud you must pass `--alpha_turb=0`, otherwise the cloud will be initialized with random turbulent velocities.
 
-
-# Running the simulation
+## Running the simulation
 
 The basic command to run `GIZMO` on one core is `./GIZMO params.txt 0`. The parameters file specifies where the initial conditions file can be found. The latter `0` flag indicates that we want to start a brand-new simulation, as opposed to restarting from a set of restartfiles (`1`) or from a snapshot (`2`).
 
