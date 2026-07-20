@@ -9,6 +9,7 @@
 :caption: Contents
 
 what_is_gizmo
+why_gizmo
 setup
 running
 visualization
