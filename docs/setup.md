@@ -14,8 +14,7 @@ To use the FFT-based gravity solver you also need `FFTW3`, but it is not require
 The paths to these libraries must be known by the build system. This is set up for a variety of pre-set system configurations in `Makefile` (including common setups like a Macbook with Homebrew packages (`MacBookCellar`), and PSMN).
 
 
-
-# Getting the code
+## Getting the code
 
 ``git clone https://github.com/mikegrudic/gizmo_leshouches``
 
@@ -28,8 +27,7 @@ Some other things you will probably want:
 
 All of these (including the GIZMO repo) are installable as python packages using pip.
 
-
-# Building GIZMO
+## Building GIZMO
 
 GIZMO's build system works as follows:
 

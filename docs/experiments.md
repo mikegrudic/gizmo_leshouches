@@ -1,6 +1,6 @@
 # Baseline experiments
 
-To start, try to obtain 3 basic solutions for a **stellar wind bubble**, an **HII region** with only radiative feedback, and a **supernova remnant** in a uniform-density medium. For each of these, try at least 3 different numerical resolutions and assess the numerical convergence.
+To start, try to obtain 3 basic solutions for a **stellar wind bubble**, an **HII region** with only radiative feedback, and a **supernova remnant** in a uniform-density medium. For each of these, try at least 3 different numerical resolutions and assess the numerical convergence. Remember: if the result changes in some clear systematic way with resolution, the simulations could give you any answer at all, making them at best difficult to interpret, and at worst useless.
 
 Some good quantities to plot are:
 - Kinetic, thermal, and magnetic (if applicable) energies
