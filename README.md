@@ -8,7 +8,7 @@
 
 [**It's not SPH**](https://starforge-tools.readthedocs.io/en/latest/data.html#what-is-a-gas-cell-in-a-gizmo-mfm-mfv-simulation). A kernel spline function is involved, and there are many structural similarities between the algorithms used by GIZMO and SPH codes, but the method for solving conservation laws is fundamentally distinct. It is best to think of the discrete simulation elements as finite-volume "cells", not particles. However, the terms are often used interchangeably.
 
-For us, the important thing is that `GIZMO` implements a wide variety of stellar feedback processes including protostellar jets, stellar winds, radiation, and supernovae, as well as the key ISM chemical and thermal processes that determine the impact that stellar feedback has. We will use `GIZMO` as a laboratory to experiment with stellar feedback.
+For us, the important thing is that `GIZMO` implements a wide variety of stellar feedback processes including protostellar jets, stellar winds, radiation, and supernovae, as well as the key ISM chemical and thermal processes that determine the impact that stellar feedback has. [Here](https://youtu.be/LeX5e51UkzI) is an example of a star formation calculation carried out with GIZMO. We will use `GIZMO` as a laboratory to experiment with stellar feedback.
 
 
 ## Setting up your GIZMO stack
@@ -39,7 +39,7 @@ This is a branch of GIZMO managed for the purposes of this workshop.
 
 GIZMO's build system works as follows:
 
-0. Specify the system environment setup you wish to build with. Different setups for different implemented HPC environments are found in different cases in the `Makefile`. For example, there is a `PSMN` environment. If you are running on a Mac with packages installed via homebrew, you can use `MacbookCellar`. To tell it which to use,
+0. Specify the system environment setup you wish to build with. Different setups for different implemented HPC environments are found in different cases in the `Makefile`. For example, there is a `PSMN` environment. If you are running on a Mac with packages installed via homebrew, you can use `MacbookCellar`. To tell it which to use, modify `Makefile.systype` in the source directory, uncommenting the `SYSTYPE=...` line corresponding to your system, or, more conveniently, create a `.gizmo` file in your root home directory with a single line `SYSTYPE=...`.
 1. Specify the options to compile the binary with in a file `Config.sh`. At baseline, essentially everything we would want to run for our stellar feedback experiments would include the following:
 ```
 SINGLE_STAR_STARFORGE_DEFAULTS
@@ -142,6 +142,9 @@ The basic procedure for interfacing with the data is demonstrated above for the 
 
 * The [meshoid](https://github.com/mikegrudic/meshoid) package provides the basic low-level projection and slicing operations that you can use to generate maps, to further  in whichever backend you choose.
 * Building on top of meshoid, the [CrunchSnaps](https://github.com/mikegrudic/CrunchSnaps) package includes the powerful [SinkVis2 command-line tool](https://crunchsnaps.readthedocs.io/en/latest/sinkvis2.html) and python API for making slice and projection maps of the data. It can be called from the command line or from inside a notebook.
+![png](images/Slice_Temperature_00090_0000_forward.png)
+*Example of a temperature slice plot made by `SinkVis2`*
+
 * GIZMO is supported by the very popular simulation analysis package [`yt`](https://yt-project.org/). If you are already familiar with `yt` then.
 * [vizmo](https://github.com/mikegrudic/vizmo) provides interactive, real-time 3D fly-through exploration of simulation data, including GIZMO. New, experimental, vibecoded slop, have fun!
 * Other visualization tools are mentioned in the [gizmo documentation](http://www.tapir.caltech.edu/~phopkins/Site/GIZMO_files/gizmo_documentation.html).
