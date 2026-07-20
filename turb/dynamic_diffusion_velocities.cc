@@ -83,7 +83,7 @@ void dynamic_diff_vel_calc_initial_operations_preloop(void);
 void dynamic_diff_vel_calc_initial_operations_preloop(void)
 {
     /* Because of the smoothing operation, need to set bar quantity to current fluid value first */
-    for (int i : ActiveParticleList) {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++) { int i = ActiveParticleList[_aidx];
         if (P[i].Type == 0) {
             CellP[i].Norm_hat = 0;
             CellP[i].h_turb = P[i].Get_Particle_Size(); // All.cf_atime unnecessary, will multiply later

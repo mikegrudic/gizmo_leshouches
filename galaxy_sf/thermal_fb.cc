@@ -28,8 +28,8 @@
 void determine_where_addthermalFB_events_occur(void)
 {
     int i; double check = 0;
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(P[i].Type != 4) {continue;}
         if(P[i].Mass <= 0) {continue;}
         check += mechanical_fb_calculate_eventrates(i,1); // this should do the calculation and add to number of SNe as needed //

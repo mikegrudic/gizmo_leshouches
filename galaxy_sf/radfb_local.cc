@@ -26,8 +26,8 @@ void radiation_pressure_winds_consolidated(void)
     Vec3<double> pos={}; int N_MAX_KERNEL,N_MIN_KERNEL,MAXITER_FB,NITER,startnode,dummy,numngb_inbox,i,j,k,n;
     double h,wt_sum,delta_v_imparted_rp=0,total_n_wind=0,total_mom_wind=0,total_prob_kick=0,avg_v_kick=0,avg_taufac=0;
 
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if((P[i].Type == 4)||((All.ComovingIntegrationOn==0)&&((P[i].Type == 2)||(P[i].Type==3))))
         {
             if(P[i].Mass <= 0 || !isfinite(P[i].Mass)) {continue;};
@@ -227,8 +227,8 @@ void HII_heating_singledomain(void)    /* this version of the HII routine only c
     Ngblist.resize(NumPart);
     MAX_N_ITERATIONS_HIIFB = 5; NITER_HIIFB = 0;
 
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
 #ifdef SINK_HII_HEATING
         if((P[i].Type == 5)||(((P[i].Type == 4)||((All.ComovingIntegrationOn==0)&&((P[i].Type == 2)||(P[i].Type==3))))))
 #else

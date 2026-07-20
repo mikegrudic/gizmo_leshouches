@@ -703,8 +703,8 @@ double Z_for_stellar_evol(int i)
 #if defined(GALSF_SFR_IMF_SAMPLING_DISTRIBUTE_SF)
 void update_stellarnumber_and_timedistribofstarformation(void)
 {
-    int i; for (int i : ActiveParticleList)
-    {
+    int i; for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(P[i].Type == 4 && P[i].Mass > 0)
         {
             double dt_since_form_code = evaluate_time_since_t_initial_in_Gyr(P[i].StellarAge) / UNIT_TIME_IN_GYR; // time since spawn in code [physical] units

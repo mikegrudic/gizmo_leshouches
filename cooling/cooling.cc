@@ -81,8 +81,8 @@ void cooling_parent_routine(void)
     /* Step 1: Determine indices of active gas particles eligible for cooling. */
     std::vector<int> cool_indices;
     cool_indices.reserve(ActiveParticleList.size());
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(P[i].Type != 0 || P[i].Mass <= 0) {continue;}
 #ifdef GALSF_EFFECTIVE_EQS
         if((CellP[i].Density*All.cf_a3inv > All.PhysDensThresh) && ((All.ComovingIntegrationOn==0) || (CellP[i].Density>=All.OverDensThresh))) {continue;} /* no cooling for effective-eos star-forming particles */
@@ -1908,8 +1908,8 @@ double GetLambdaSpecies(long k_index, long index_x0y0, long index_x0y1, long ind
 #ifdef GALSF_FB_FIRE_RT_LONGRANGE
 void selfshield_local_incident_uv_flux(void)
 {   /* include local self-shielding with the following */
-    int i; for (int i : ActiveParticleList)
-    {
+    int i; for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(P[i].Type==0)
         {
             if((CellP[i].Rad_Flux_UV>0) && (P[i].KernelRadius>0) && (CellP[i].Density>0) && (P[i].Mass>0) && (All.Time>0))

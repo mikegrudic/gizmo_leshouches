@@ -128,7 +128,7 @@ void do_hermite_prediction(void)
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(ti_step, tstart, tend)
 #endif
-    for (int i : ActiveParticleList) {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++) { int i = ActiveParticleList[_aidx];
 	if(eligible_for_hermite(i)) { /* check if we're actually eligible */
 	    if(P[i].Mass > 0) { /* skip massless particles scheduled for deletion */
 		ti_step = P[i].integertime_step();
@@ -154,7 +154,7 @@ void do_hermite_correction(void) // corrector step
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(ti_step, tstart, tend)
 #endif
-    for (int i : ActiveParticleList) {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++) { int i = ActiveParticleList[_aidx];
 	if(eligible_for_hermite(i)){
                 if(P[i].Mass > 0) {
                     ti_step = P[i].integertime_step();

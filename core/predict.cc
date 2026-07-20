@@ -80,8 +80,8 @@ void reconstruct_timebins(void)
     make_list_of_active_particles();
     
     NumForceUpdate = 0;
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         NumForceUpdate++;
         if(i >= NumPart)
         {

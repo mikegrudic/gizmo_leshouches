@@ -213,7 +213,7 @@ void dynamic_diff_calc(void) {
     PRINT_STATUS(" ..begin initializing smoothed quantities.");
 
     /* Because of smoothing operation, we don't zero these out, they get set to their current value */
-    for (int i : ActiveParticleList) {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++) { int i = ActiveParticleList[_aidx];
         if (P[i].Type == 0) {
             memset(&DynamicDiffDataPasser[i], 0, sizeof(struct temporary_data_dyndiff));
 
@@ -492,7 +492,7 @@ void dynamic_diff_calc(void) {
         /* The first two iterations were solely to calculate the hat quantities */ 
         { 
             /* Now that we have finished preliminaries, need to do the coefficient calculation */
-            for (int i : ActiveParticleList) {
+            for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++) { int i = ActiveParticleList[_aidx];
                 if (P[i].Type == 0) {
 #ifdef GALSF_SUBGRID_WINDS
                     if (CellP[i].DelayTime > 0) continue; /* Leave C_s alone for wind particles */

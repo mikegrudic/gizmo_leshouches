@@ -150,7 +150,8 @@ void rt_update_chemistry(void)
     fac = UNIT_TIME_IN_CGS / (UNIT_LENGTH_IN_CGS*UNIT_LENGTH_IN_CGS*UNIT_LENGTH_IN_CGS);
     c_light_codeunits = C_LIGHT_CODE;
     
-    for (int i : ActiveParticleList)
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(P[i].Type == 0)
         {
             dtime = get_particle_timestep_in_physical(i);
@@ -229,6 +230,7 @@ void rt_update_chemistry(void)
             if(CellP[i].HeI > y_fac) {CellP[i].HeI = y_fac;}
 #endif
         }
+    }
 }
 
 #else
@@ -247,7 +249,8 @@ void rt_update_chemistry(void)
     fac = UNIT_TIME_IN_CGS / (UNIT_LENGTH_IN_CGS*UNIT_LENGTH_IN_CGS*UNIT_LENGTH_IN_CGS);
     c_light_codeunits = C_LIGHT_CODE;
     
-    for (int i : ActiveParticleList)
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(P[i].Type == 0)
         {
             /* get the photo-ionization rates*/
@@ -342,6 +345,7 @@ void rt_update_chemistry(void)
             if(CellP[i].HeI > y_fac) {CellP[i].HeI = y_fac;}
 #endif
         }
+    }
 }
 #endif
 

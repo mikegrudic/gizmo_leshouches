@@ -381,8 +381,8 @@ void add_turb_accel()
 {
     set_turb_ampl();
     int i, m; double acc[3], fac_sol = 2.*solenoidal_frac_total_weight_renormalization();
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(P[i].Type == 0)
         {
             double fx = 0, fy = 0, fz = 0;
@@ -424,8 +424,8 @@ void do_turb_driving_step_first_half(void)
 {
     CPU_Step[CPU_MISC] += measure_time();
     int i; integertime ti_step, tstart, tend; double dt_gravkick;
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         ti_step = P[i].integertime_step(); tstart = P[i].Ti_begstep; tend = P[i].Ti_begstep + ti_step / 2;	/* beginning / midpoint of step */
         dt_gravkick = get_gravkick_factor(tstart, tend, -1, 0);
         if(P[i].Type == 0)
@@ -445,8 +445,8 @@ void do_turb_driving_step_second_half(void)
 {
     CPU_Step[CPU_MISC] += measure_time();
     int i; integertime ti_step, tstart, tend; double dt_gravkick;
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         ti_step = P[i].integertime_step(); tstart = P[i].Ti_begstep + ti_step / 2; tend = P[i].Ti_begstep + ti_step;	/* midpoint/end of step */
         dt_gravkick = get_gravkick_factor(tstart, tend, -1, 0);
         if(P[i].Type == 0)

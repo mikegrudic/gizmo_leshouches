@@ -575,7 +575,8 @@ void hydro_gradient_calc(void)
     DataNodeList = (struct data_nodelist *) mymalloc("DataNodeList", All.BunchSize * sizeof(struct data_nodelist));
 
     /* before doing any operations, need to zero the appropriate memory so we can correctly do pair-wise operations */
-    for (int i : ActiveParticleList)
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(P[i].Type==0)
         {
             int k2;
@@ -636,6 +637,7 @@ void hydro_gradient_calc(void)
             }
 #endif
         }
+    }
 
 
 
@@ -644,7 +646,8 @@ void hydro_gradient_calc(void)
     for(gradient_iteration = 0; gradient_iteration < NUMBER_OF_GRADIENT_ITERATIONS; gradient_iteration++)
     {
         // need to zero things used in the iteration (anything appearing in out2particle_GasGrad_iter)
-        for (int i : ActiveParticleList)
+        for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+        { int i = ActiveParticleList[_aidx];
             if(P[i].Type==0)
             {
 #ifdef MHD_CONSTRAINED_GRADIENT
@@ -654,6 +657,7 @@ void hydro_gradient_calc(void)
 #endif
 #endif
             }
+        }
 
         // now we actually begin the main gradient loop //
         NextParticle = 0;	/* begin with this index into ActiveParticleList */
@@ -871,7 +875,8 @@ void hydro_gradient_calc(void)
 
         /* here, we insert intermediate operations on the results, from the iterations we have completed */
 #ifdef MHD_CONSTRAINED_GRADIENT
-        for (int i : ActiveParticleList)
+        for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+        { int i = ActiveParticleList[_aidx];
             if(P[i].Type == 0)
             {
                 CellP[i].FlagForConstrainedGradients = 1;
@@ -1010,6 +1015,7 @@ void hydro_gradient_calc(void)
                 local_slopelimiter(CellP[i].Gradients.Phi,GasGradDataPasser[i].Maxima.Phi,GasGradDataPasser[i].Minima.Phi,a_limiter,P[i].KernelRadius,0.0, 0, 0, 0);
 #endif
             } // closes Ptype == 0 check
+        }
 #endif
     } // closes gradient_iteration
 
@@ -1019,7 +1025,8 @@ void hydro_gradient_calc(void)
 
 
     /* do final operations on results: these are operations that can be done after the complete set of iterations */
-    for (int i : ActiveParticleList)
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(P[i].Type == 0)
         {
             /* now we can properly calculate (second-order accurate) gradients of hydrodynamic quantities from this loop */
@@ -1380,6 +1387,7 @@ void hydro_gradient_calc(void)
 #endif
 
         }
+    }
 
 
     /* free the temporary structure we created for the MinMax and additional data passing */

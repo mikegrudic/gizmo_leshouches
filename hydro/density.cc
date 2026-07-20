@@ -473,7 +473,7 @@ void density(void)
 #endif
     
     /* initialize anything we need to about the active particles before their loop */
-    for (int i : ActiveParticleList) {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++) { int i = ActiveParticleList[_aidx];
         if(density_isactive(i)) {
             Left[i] = Right[i] = 0;
 #ifdef SINK_PARTICLES
@@ -505,8 +505,8 @@ void density(void)
 
         /* do check on whether we have enough neighbors, and iterate for density-rkern solution */
         double tstart = my_second(), tend;
-        npleft = 0; for (int i : ActiveParticleList)
-        {
+        npleft = 0; for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+        { int i = ActiveParticleList[_aidx];
             desnumngb = All.DesNumNgb; desnumngbdev = All.MaxNumNgbDeviation;
             /* in the initial timestep and iteration, use a much more strict tolerance for the neighbor number */
             if(All.Time==All.TimeBegin) {if(All.MaxNumNgbDeviation > 0.05) desnumngbdev=0.05;}
@@ -872,8 +872,8 @@ void density(void)
     myfree(Right); myfree(Left);
 
     /* mark as active again */
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(P[i].TimeBin < 0) {P[i].TimeBin = -P[i].TimeBin - 1;}
     }
 
@@ -883,8 +883,8 @@ void density(void)
      won't save much b/c the real cost is in the neighbor loop for each particle, but it's something )
      -- also, some results (for example, viscosity suppression below) should not be calculated unless
      the quantities are 'stabilized' at their final values -- */
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(density_isactive(i))
         {
             if(P[i].Type == 0 && P[i].Mass > 0)
@@ -1110,7 +1110,7 @@ int cellcorrections_evaluate(int target, int mode, int *exportflag, int *exportn
 /* final operations for after the updates are computed */
 void cellcorrections_final_operations_and_cleanup(void)
 {
-    int i; for (int i : ActiveParticleList) { /* check all active elements */
+    int i; for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++) { int i = ActiveParticleList[_aidx]; /* check all active elements */
         CONDITIONFUNCTION_FOR_EVALUATION /* ensures only the ones which met our criteria above are actually treated here */
         {
             if(CellP[i].Volume_1 > 0) {CellP[i].Density = P[i].Mass / CellP[i].Volume_1;} else {CellP[i].Volume_1 = CellP[i].Volume_0;} // set the updated density. other variables that need volumes will all scale off this, so we can rely on it to inform everything else [if bad value here, revert to the 0th-order volume quadrature]

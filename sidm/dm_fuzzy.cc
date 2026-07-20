@@ -471,7 +471,7 @@ void DMGrad_gradient_calc(void)
     CPU_Step[CPU_MISC] += measure_time(); double t00_truestart = my_second();
     PRINT_STATUS(" ..calculating higher-order gradients for DM density field\n");
     /* initialize data, if needed */
-    if(All.Time==All.TimeBegin) {int i; for (int i : ActiveParticleList) {P[i].AGS_Numerical_QuantumPotential=0;}}
+    if(All.Time==All.TimeBegin) {int i; for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++) { int i = ActiveParticleList[_aidx];P[i].AGS_Numerical_QuantumPotential=0;}}
 
     /* allocate memory shared across all loops */
     DMGradDataPasser = (struct temporary_dmgradients_data_topass *) mymalloc("DMGradDataPasser",NumPart * sizeof(struct temporary_dmgradients_data_topass));
@@ -484,8 +484,8 @@ void DMGrad_gradient_calc(void)
 
         /* do post-loop operations on the results */
         int i;
-        for (int i : ActiveParticleList)
-        {
+        for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+        { int i = ActiveParticleList[_aidx];
             if(loop_iteration <= 0)
             {
                 /* now we can properly calculate (second-order accurate) gradients of hydrodynamic quantities from this loop */

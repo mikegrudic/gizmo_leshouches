@@ -50,8 +50,8 @@ void determine_where_SNe_occur(void)
     double mpi_npossible,mpi_nhosttotal,mpi_ntotal,mpi_ptotal,mpi_dtmean,mpi_rmean;
     mpi_npossible=mpi_nhosttotal=mpi_ntotal=mpi_ptotal=mpi_dtmean=mpi_rmean=0;
     // loop over particles //
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         P[i].SNe_ThisTimeStep=0;
 #ifdef GALSF_FB_FIRE_STELLAREVOLUTION
         P[i].MassReturn_ThisTimeStep=0;

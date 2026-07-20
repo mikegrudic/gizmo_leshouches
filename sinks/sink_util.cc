@@ -27,8 +27,8 @@ void sink_start(void)
 
     /* count the num BHs on this task */
     N_active_loc_Sink=0;
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(sink_isactive(i))
         {
             P[i].IndexMapToTempStruc = N_active_loc_Sink;         /* allows access via SinkTempInfo[P[i].IndexMapToTempStruc] */
@@ -47,8 +47,8 @@ void sink_start(void)
     memset( &SinkTempInfo[0], 0, N_active_loc_Sink * sizeof(struct sink_temp_particle_data) );
 
     Nbh=0;
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(sink_isactive(i))
         {
             SinkTempInfo[Nbh].index = i;               /* only meaningful field set here */

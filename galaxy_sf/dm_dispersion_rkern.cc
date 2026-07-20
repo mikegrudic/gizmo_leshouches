@@ -121,7 +121,7 @@ void disp_density(void)
     Left = (MyFloat *) mymalloc("Left", NumPart * sizeof(MyFloat));
     Right = (MyFloat *) mymalloc("Right", NumPart * sizeof(MyFloat));
     /* initialize anything we need to about the active particles before their loop */
-    for (int i : ActiveParticleList) {if(disp_density_isactive(i)) {CellP[i].NumNgbDM = 0; Left[i] = Right[i] = 0;}}
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++) { int i = ActiveParticleList[_aidx];if(disp_density_isactive(i)) {CellP[i].NumNgbDM = 0; Left[i] = Right[i] = 0;}}
     
     /* allocate buffers to arrange communication */
     #include "../system/code_block_xchange_perform_ops_malloc.h" /* this calls the large block of code which contains the memory allocations for the MPI/OPENMP/Pthreads parallelization block which must appear below */
@@ -132,8 +132,8 @@ void disp_density(void)
 
         /* do check on whether we have enough neighbors, and iterate for density-rkern solution */
         double tstart = my_second(), tend;
-        npleft = 0; for (int i : ActiveParticleList)
-        {
+        npleft = 0; for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+        { int i = ActiveParticleList[_aidx];
             if(disp_density_isactive(i))
             {
                 redo_particle = 0; /* now check whether we have enough neighbours, and are below the maximum search radius */
@@ -225,14 +225,14 @@ void disp_density(void)
     myfree(Right); myfree(Left);
 
     /* mark as active again */
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(P[i].TimeBin < 0) {P[i].TimeBin = -P[i].TimeBin - 1;}
     }
     
     /* now that we are DONE iterating to find rkern, we can do the REAL final operations on the results */
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if(disp_density_isactive(i))
         {
             if(CellP[i].NumNgbDM > 0)

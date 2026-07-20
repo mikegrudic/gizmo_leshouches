@@ -410,8 +410,8 @@ void star_formation_parent_routine(void)
     stars_spawned = stars_converted = 0; sum_sm = sum_mass_stars = 0;
     for(bits = 0; GALSF_GENERATIONS > (1 << bits); bits++);
 
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         if((P[i].Type == 0)&&(P[i].Mass>0))
         {
             CellP[i].Sfr = 0; flag = 1; /* will be reset below if flag==0, but default to flag = 1 (non-eligible) */

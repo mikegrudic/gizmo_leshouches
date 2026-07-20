@@ -44,8 +44,8 @@ void force_update_tree(void)
 
 #ifdef OPENMP_TREE_UPDATE
     /* Phase 1: drift all ancestor nodes to Ti_Current (serial — force_drift_node has complex read-modify-write) */
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         int no = Father[i];
         while(no >= 0)
         {
@@ -63,8 +63,8 @@ void force_update_tree(void)
         P[i].dp = {};
     }
 #else
-    for (int i : ActiveParticleList)
-    {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+    { int i = ActiveParticleList[_aidx];
         force_kick_node(i, P[i].dp);
         P[i].dp = {};
     }
@@ -410,8 +410,8 @@ void force_update_hmax(void)
 
 #ifdef OPENMP_TREE_UPDATE
   /* Phase 1: drift all ancestor nodes (serial — force_drift_node is not thread-safe) */
-  for (int i : ActiveParticleList)
-  {
+  for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+  { int i = ActiveParticleList[_aidx];
 #if defined(ADAPTIVE_GRAVSOFT_FORALL)
     if(P[i].Mass > 0)
 #else
@@ -474,8 +474,8 @@ void force_update_hmax(void)
       }
   }
 #else
-  for (int i : ActiveParticleList)
-  {
+  for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++)
+  { int i = ActiveParticleList[_aidx];
 #if defined(ADAPTIVE_GRAVSOFT_FORALL)
     if(P[i].Mass > 0)
 #else

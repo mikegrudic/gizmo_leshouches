@@ -407,7 +407,7 @@ void calculate_non_standard_physics(void)
 #endif
 
 #ifdef SINK_INTERACT_ON_GAS_TIMESTEP
-    int i; for (int i : ActiveParticleList){if(P[i].Type == 5 && P[i].do_gas_search_this_timestep){P[i].dt_since_last_gas_search = 0;}}
+    int i; for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++){ int i = ActiveParticleList[_aidx];if(P[i].Type == 5 && P[i].do_gas_search_this_timestep){P[i].dt_since_last_gas_search = 0;}}
 #endif
 
 }

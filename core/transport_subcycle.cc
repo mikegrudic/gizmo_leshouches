@@ -167,7 +167,7 @@ void out2particle_transport(struct OUTPUT_STRUCT_NAME *out, int i, int mode, int
 void transport_flux_initial_operations(void)
 {
     int k;
-    for(int i : ActiveParticleList) {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++) { int i = ActiveParticleList[_aidx];
         if(P[i].Type != 0 || P[i].Mass <= 0) continue;
 #if defined(RT_SOLVER_EXPLICIT) && defined(RT_EVOLVE_ENERGY)
         for(k=0; k<N_RT_FREQ_BINS; k++) CellP[i].Dt_Rad_E_gamma[k] = 0;
@@ -195,7 +195,7 @@ void transport_subcycle_exchange_fluxes(void)
        The flux exchange zeroed Dt_Rad_E_gamma and recomputed only transport fluxes;
        the work terms must be re-added so each sub-step's kick includes them. */
 #if defined(RT_RAD_PRESSURE_FORCES) && defined(RT_EVOLVE_ENERGY)
-    for(int i : ActiveParticleList) {
+    for (int _aidx = 0; _aidx < (int)ActiveParticleList.size(); _aidx++) { int i = ActiveParticleList[_aidx];
         if(P[i].Type != 0 || P[i].Mass <= 0) continue;
         for(int kf=0; kf<N_RT_FREQ_BINS; kf++)
             CellP[i].Dt_Rad_E_gamma[kf] += CellP[i].Dt_Rad_E_gamma_Work[kf];
