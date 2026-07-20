@@ -5,5 +5,5 @@ extensions = [
     "sphinx.ext.mathjax",
 ]
 myst_enable_extensions = ["dollarmath", "colon_fence"]
-html_theme = "sphinx_rtd_theme"
+html_theme = "furo"
 source_suffix = {".rst": "restructuredtext", ".md": "markdown"}

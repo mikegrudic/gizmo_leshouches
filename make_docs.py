@@ -44,16 +44,13 @@ for block in blocks[1:]:
 PAGES = {
     "setup": [
         "Setting up your GIZMO stack",
-        "Getting the code",
-        "Building GIZMO",
     ],
     "running": [
         "Running test problems",
         "Setting up an ISM cloud",
-        "Running the simulation",
     ],
     "visualization": [
-        "Visualizing the output",
+        "Visualization",
     ],
     "experiments": [
         "Baseline experiments",
@@ -69,13 +66,21 @@ PAGE_TITLES = {
 }
 
 # --- write content pages ---
-# Each page gets one H1 title; section headings stay at ## so Sphinx sees a
-# clean single-title-per-page structure and renders the sidebar consistently.
+# Multi-section pages get a single H1 page title; ## section headings stay put.
+# Single-section pages promote ## → # directly (no redundant double title).
 for slug, heading_list in PAGES.items():
-    content = "\n".join(sections[h] for h in heading_list if h in sections)
-    page_title = f"# {PAGE_TITLES[slug]}\n\n"
+    missing = [h for h in heading_list if h not in sections]
+    if missing:
+        print(f"WARNING: {slug}.md — section(s) not found in README: {missing}")
+    found = [h for h in heading_list if h in sections]
+    content = "\n".join(sections[h] for h in found)
+    if len(found) == 1:
+        # promote all headings one level so ## → # (page title) and ### → ## etc.
+        content = re.sub(r'^(#{2,})', lambda m: m.group(1)[1:], content, flags=re.MULTILINE)
+    else:
+        content = f"# {PAGE_TITLES[slug]}\n\n" + content
     with open(os.path.join(DOCS, f"{slug}.md"), "w") as f:
-        f.write(page_title + content)
+        f.write(content)
 
 # --- write index ---
 toctree = """\
