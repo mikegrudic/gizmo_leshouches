@@ -1,0 +1,43 @@
+#!/bin/zsh
+# Start a Jupyter notebook on PSMN with local port forwarding.
+#
+# Usage:
+#   psmn-jupyter [remote-dir]
+#   psmn-jupyter --node c6420node203 [remote-dir]   # forward through to a SLURM compute node
+#
+# The --node form expects Jupyter to already be running on that node
+# (start it from an interactive srun session first, then run this script).
+
+if [[ "$1" == "--node" ]]; then
+    NODE="$2"; shift 2
+    PORT=8888
+    # Tunnel: local:PORT -> e5-2667v4comp2 -> NODE:PORT
+    # Jupyter must be running on NODE already (--ip=0.0.0.0 --port=$PORT)
+    echo "Forwarding port $PORT through e5-2667v4comp2 to $NODE..."
+    ssh -N -L $PORT:$NODE:$PORT e5-2667v4comp2 &
+    TUNNEL_PID=$!
+    trap "kill $TUNNEL_PID 2>/dev/null" EXIT INT TERM
+    echo "Tunnel up (PID $TUNNEL_PID). Open http://localhost:$PORT in your browser."
+    echo "Paste the token from the Jupyter terminal on $NODE."
+    wait $TUNNEL_PID
+else
+    DIR="${${1:-.}/#$HOME/~}"
+
+    # Pick a free port on the remote (avoids fighting stale Jupyter sessions)
+    PORT=$(ssh e5-2667v4comp2 \
+        "python3 -c \"import socket; s=socket.socket(); s.bind(('',0)); print(s.getsockname()[1]); s.close()\"")
+    echo "Starting Jupyter on e5-2667v4comp2 (port $PORT)..."
+
+    # Free that port locally if needed
+    lsof -ti tcp:$PORT | xargs kill -9 2>/dev/null; true
+
+    ssh -L "${PORT}:localhost:${PORT}" e5-2667v4comp2 \
+        "cd $DIR && ~/py313/bin/jupyter notebook --no-browser --port=$PORT --port-retries=0 2>&1" | \
+    while IFS= read -r line; do
+        print "$line"
+        if [[ "$line" == *"http://127.0.0.1:${PORT}"* ]]; then
+            url=${${line}##* }
+            open "$url" 2>/dev/null
+        fi
+    done
+fi
