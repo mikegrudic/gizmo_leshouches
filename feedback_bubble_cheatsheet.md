@@ -20,8 +20,8 @@ Strong shock conditions ($\mathcal{M} \equiv v_s/V_{\rm ms} \gg 1$), $\gamma = 5
 | Compression ratio | $\rho_2/\rho_1 \approx 4$ | Eq. 36.22 |
 | Post-shock velocity | $u_2 \approx \dfrac{1}{4}v_s$ | Shock frame; Eq. 36.23 |
 | Post-shock temperature | $T_2 \approx \dfrac{3}{16}\dfrac{\mu v_s^2}{k}$ | Eq. 36.24 |
-| Post-shock temperature | $T_2 \approx 1.38\times10^7\,{\rm K}\left(\dfrac{\mu}{0.609\,m_H}\right)\left(\dfrac{v_s}{10^3\,{\rm km\,s^{-1}}}\right)^2$ | Fully ionized gas; Eq. 36.28 |
-| Cooling time | $t_{\rm cool} \approx 7000\left(\dfrac{{\rm cm}^{-3}}{n_{H,0}}\right)\left(\dfrac{v_s}{100\,{\rm km\,s^{-1}}}\right)^{3.4}\,{\rm yr}$ | $80 \lesssim v_s/{\rm km\,s^{-1}} \lesssim 1200$; Eq. 36.33 |
+| Post-shock temperature | $T_2 \approx 1.38\times10^7\thinspace {\rm K}\left(\dfrac{\mu}{0.609\thinspace m_H}\right)\left(\dfrac{v_s}{10^3\thinspace {\rm km\thinspace s^{-1}}}\right)^2$ | Fully ionized gas; Eq. 36.28 |
+| Cooling time | $t_{\rm cool} \approx 7000\left(\dfrac{{\rm cm}^{-3}}{n_{H,0}}\right)\left(\dfrac{v_s}{100\thinspace {\rm km\thinspace s^{-1}}}\right)^{3.4}\thinspace {\rm yr}$ | $80 \lesssim v_s/{\rm km\thinspace s^{-1}} \lesssim 1200$; Eq. 36.33 |
 | Radiative shock density | $\rho_{\rm ps}/\rho_0 \approx v_s^2/c_{s,0}^2$ | After cooling to preshock $T$ |
 
 ---
@@ -45,4 +45,4 @@ Strong shock conditions ($\mathcal{M} \equiv v_s/V_{\rm ms} \gg 1$), $\gamma = 5
 | $t_{\rm cool}$ | Time at which the Sedov-Taylor remnant becomes radiative |
 | $R_{\rm cool}$ | SNR radius at $t_{\rm cool}$ |
 | $p_{\rm cool}$ | Terminal momentum at $t_{\rm cool}$, $p_{\rm cool} = \frac{4\pi}{3}\rho_0 R_{\rm cool}^3 \dot{R}_{\rm cool}$ |
-| $\mu$ | Mean particle mass; $\mu = 1.273\,m_H$ for neutral HI, $\mu = 0.609\,m_H$ for fully ionized gas (He/H = 0.1 by number) |
+| $\mu$ | Mean particle mass; $\mu = 1.273\thinspace m_H$ for neutral HI, $\mu = 0.609\thinspace m_H$ for fully ionized gas (He/H = 0.1 by number) |
