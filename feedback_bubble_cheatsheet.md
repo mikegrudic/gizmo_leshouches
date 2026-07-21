@@ -6,7 +6,7 @@
 | **Stellar winds** | $R_s = 0.76\left(\dfrac{\dot{M}v_w^2}{\rho_0}\right)^{1/5} t^{3/5}$ | $R_s \propto t^{3/5}$ | Wind bubble with hot, radiatively-inefficient shocked wind component has been established. |
 | **Radiation pressure** | $R_s = \left(\dfrac{3\dot{P}}{2\pi\rho_0}\right)^{1/4} t^{1/2}$ | $R_s \propto t^{1/2}$ | Photons absorbed in a thin optically-thick shell; also works for radiatively-efficient winds with $\dot{P}=\dot{M}v_{\rm w}$. |
 | **SNe: free expansion** | $R_s \approx v_{\rm ej}\thinspace  t$ | $R_s \propto t$ | Mass swept out is $<<M_{\rm ej}$ |
-| **SNe: Sedov-Taylor** | $R_s = \left(\dfrac{2.026\thinspace  E}{\rho_0}\right)^{1/5} t^{2/5}$ | $R_s \propto t^{2/5}$ | Mass swept out is $>>M_{\rm ej}$ |
+| **SNe: Sedov-Taylor** | $R_s = \left(\dfrac{2.026\thinspace  E}{\rho_0}\right)^{1/5} t^{2/5}$ | $R_s \propto t^{2/5}$ | Mass swept out is $>>M_{\rm ej}$ but cooling negligible |
 | **SNe: radiative snowplow** | $R_s \approx \left(\dfrac{3p_{\rm cool}}{\pi\rho_0}\right)^{1/4} t^{1/4}$ | $R_s \propto t^{1/4}$ | Gas has cooled ($t>>t_{\rm cool}$) |
 
 ---
@@ -22,6 +22,7 @@ Strong shock conditions ($\mathcal{M} \equiv v_s/V_{\rm ms} \gg 1$), $\gamma = 5
 | Post-shock temperature | $T_2 \approx \dfrac{3}{16}\dfrac{\mu m_H v_s^2}{k}$ | Eq. 36.24 |
 | Post-shock temperature | $T_2 \approx 1.38\times10^7\thinspace {\rm K}\left(\dfrac{\mu}{0.609}\right)\left(\dfrac{v_s}{10^3\thinspace {\rm km\thinspace s^{-1}}}\right)^2$ | Fully ionized gas; Eq. 36.28 |
 | Cooling time | $t_{\rm cool} \approx 7000\left(\dfrac{{\rm cm}^{-3}}{n_{H,0}}\right)\left(\dfrac{v_s}{100\thinspace {\rm km\thinspace s^{-1}}}\right)^{3.4}\thinspace {\rm yr}$ | $80 \lesssim v_s/{\rm km\thinspace s^{-1}} \lesssim 1200$; Eq. 36.33 |
+| | $\approx 7000\left(\dfrac{{\rm cm}^{-3}}{n_{H,0}}\right)\left(\dfrac{0.609\thinspace T_2}{\mu\cdot1.38\times10^5\thinspace {\rm K}}\right)^{1.7}\thinspace {\rm yr}$ | |
 | Radiative shock density | $\rho_{\rm ps}/\rho_0 \approx v_s^2/c_{s,0}^2$ | After cooling to preshock $T$ |
 
 ---
