@@ -14,4 +14,5 @@ setup
 running
 visualization
 experiments
+feedback_bubble_cheatsheet
 ```
