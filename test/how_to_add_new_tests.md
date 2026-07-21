@@ -59,7 +59,7 @@ def compute_test_statistic(f, save_reference_solution=False, plot=False):
             nH_ref = F["PartType0/Density"][:] * rho_to_nH
             T_ref = F["PartType0/Temperature"][:]
         plt.loglog(nH_ref, T_ref, ".", markersize=1, color="red", label="Benchmark")
-        plt.xlabel(r"$n_{\rm H}\,\rm\left(\rm cm^{-3}\right)$")
+        plt.xlabel(r"$n_{\rm H};\rm\left(\rm cm^{-3}\right)$")
         plt.ylabel(r"$T (\rm K)$")
         plt.legend(loc=3)
         plt.savefig("test/gmc_cooling/nH_vs_T.png", bbox_inches="tight")
