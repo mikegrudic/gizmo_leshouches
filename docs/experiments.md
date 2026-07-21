@@ -7,7 +7,7 @@ To start, try to obtain 3 basic solutions for a **stellar wind bubble**, an **HI
 Some good quantities to plot are:
 - Kinetic, thermal, and magnetic (if applicable) energies
 - $n_{\rm H}$ vs. $T$ phase diagram at different times. What is happening in various regions of the phase diagram?
-- Post-shock temperature: is it consistent with analytic expectations for the velocity of the shock?
+- Post-shock temperature: is it consistent with [analytic expectations](../feedback_bubble_cheatsheet.md) for the velocity of the shock?
 - The bubble shell radius versus time.
 - Total radial momentum versus time.
 - Total cooling rate (make sure to include the `OUTPUT_COOLRATE_DETAIL` flag in your Config.sh).
@@ -15,7 +15,7 @@ Some good quantities to plot are:
 - Radial temperature structure at different times.
 - Surface density maps: does the bubble remain spherical? If not, what structures develop?
 
-Try to understand these results: do they make sense for the physical processes at work? Where applicable, compare these quantities with analytic expectations (we will discuss these in detail in feedback lecture 1).
+Try to understand these results: do they make sense for the physical processes at work? Where applicable, compare these quantities with [analytic expectations](../feedback_bubble_cheatsheet.md) (we will discuss these in detail in feedback lecture 1).
 
 
 ## Further Explorations

@@ -176,7 +176,7 @@ To start, try to obtain 3 basic solutions for a **stellar wind bubble**, an **HI
 Some good quantities to plot are:
 - Kinetic, thermal, and magnetic (if applicable) energies
 - $n_{\rm H}$ vs. $T$ phase diagram at different times. What is happening in various regions of the phase diagram?
-- Post-shock temperature: is it consistent with analytic expectations for the velocity of the shock?
+- Post-shock temperature: is it consistent with [analytic expectations](feedback_bubble_cheatsheet.md) for the velocity of the shock?
 - The bubble shell radius versus time.
 - Total radial momentum versus time.
 - Total cooling rate (make sure to include the `OUTPUT_COOLRATE_DETAIL` flag in your Config.sh).
@@ -184,7 +184,7 @@ Some good quantities to plot are:
 - Radial temperature structure at different times.
 - Surface density maps: does the bubble remain spherical? If not, what structures develop?
 
-Try to understand these results: do they make sense for the physical processes at work? Where applicable, compare these quantities with analytic expectations (we will discuss these in detail in feedback lecture 1).
+Try to understand these results: do they make sense for the physical processes at work? Where applicable, compare these quantities with [analytic expectations](feedback_bubble_cheatsheet.md) (we will discuss these in detail in feedback lecture 1).
 
 ## Further Explorations
 Feedback-driven flows are an active area of research, and most cases that are more complex than the simple uniform-density bubbles above are essentially open problems: many have been explored, but there is generally no comprehensive theory. Here are some ideas for additional questions to explore. If there is another question that interests you, it may also be possible to explore with `GIZMO`, so have fun with it!
