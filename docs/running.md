@@ -41,7 +41,7 @@ Note the hierarchical structure of the snapshots: "particle" type at the top lev
 
 ## Setting up an ISM cloud 
 
-[`MakeCloud`](github.com/mikegrudic/MakeCloud/) is a tool for setting up the initial conditions for idealized GMC or ISM cloud simulations. It has many different options with certain convenient defaults.  Run `MakeCloud -h` to get a rundown of all of the different options. By default, MakeCloud assumes God's system of units for dealing with objects on the scale of GMCs and star clusters: $M_\odot$, $\rm km;s^{-1}$, $\rm pc$, and $\rm G$. The resulting time unit is $T = \rm pc / (km;s^{-1}) \approx 1 \rm Myr$. Nice, right?
+[`MakeCloud`](github.com/mikegrudic/MakeCloud/) is a tool for setting up the initial conditions for idealized GMC or ISM cloud simulations. It has many different options with certain convenient defaults.  Run `MakeCloud -h` to get a rundown of all of the different options. By default, MakeCloud assumes God's system of units for dealing with objects on the scale of GMCs and star clusters: $M_\odot$, $\rm km\thinspace s^{-1}$, $\rm pc$, and $\rm G$. The resulting time unit is $T = \rm pc / (km\thinspace s^{-1}) \approx 1 \rm Myr$. Nice, right?
 
 An important thing to note when setting up GIZMO simulations is that, typically, we are following finite-mass, quasi-Lagrangian elements around, so we must specify a *mass* resolution, and the spatial resolution adapts to the density as $\Delta x = \left(\Delta m/\rho\right)^{1/3}$. When running `MakeCloud`, we can specify the mass resolution via either the `--N` parameter (which specifies the number of gas cells initially in the cloud), or the `--dm` parameter (which sets the actual $\Delta m$ in code units).
 
