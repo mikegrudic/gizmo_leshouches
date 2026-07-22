@@ -27,6 +27,18 @@ Strong shock conditions ($\mathcal{M} \equiv v_s/V_{\rm ms} \gg 1$), $\gamma = 5
 
 ---
 
+## Supernova radiative phase quantities
+
+At the transition from Sedov-Taylor to the radiative (snowplow) phase:
+
+| Quantity | Expression |
+|:---|:---|
+| Transition time | $t_{\rm cool} \approx 40\thinspace{\rm kyr}\thinspace Z^{-1/3}\left(\dfrac{E}{10^{51}\thinspace{\rm erg}}\right)^{0.22}\left(\dfrac{n_{H,0}}{1\thinspace{\rm cm}^{-3}}\right)^{-0.58}$ |
+| Transition radius | $R_{\rm cool} \approx 24\thinspace{\rm pc}\thinspace Z^{-2/15}\left(\dfrac{E}{10^{51}\thinspace{\rm erg}}\right)^{0.29}\left(\dfrac{n_{H,0}}{1\thinspace{\rm cm}^{-3}}\right)^{-0.42}$ |
+| Terminal momentum | $p_{\rm cool} \approx 3\times10^5\thinspace M_\odot\thinspace{\rm km\thinspace s^{-1}}\thinspace Z^{-1/5}\left(\dfrac{E}{10^{51}\thinspace{\rm erg}}\right)^{0.94}\left(\dfrac{n_{H,0}}{1\thinspace{\rm cm}^{-3}}\right)^{-0.11}$ |
+
+---
+
 ## Glossary
 
 | Symbol | Definition |
@@ -47,3 +59,4 @@ Strong shock conditions ($\mathcal{M} \equiv v_s/V_{\rm ms} \gg 1$), $\gamma = 5
 | $R_{\rm cool}$ | SNR radius at $t_{\rm cool}$ |
 | $p_{\rm cool}$ | Terminal momentum at $t_{\rm cool}$, $p_{\rm cool} = \frac{4\pi}{3}\rho_0 R_{\rm cool}^3 \dot{R}_{\rm cool}$ |
 | $\mu$ | Mean molecular weight (dimensionless); $\mu = 1.273$ for neutral HI, $\mu = 0.609$ for fully ionized gas (He/H = 0.1 by number) |
+| $Z$ | Gas metallicity in units of solar metallicity |
