@@ -21,9 +21,21 @@ Strong shock conditions ($\mathcal{M} \equiv v_s/V_{\rm ms} \gg 1$), $\gamma = 5
 | Post-shock velocity | $u_2 \approx \dfrac{1}{4}v_s$ | Shock frame; Eq. 36.23 |
 | Post-shock temperature | $T_2 \approx \dfrac{3}{16}\dfrac{\mu m_H v_s^2}{k}$ | Eq. 36.24 |
 | Post-shock temperature | $T_2 \approx 1.38\times10^7\thinspace {\rm K}\left(\dfrac{\mu}{0.609}\right)\left(\dfrac{v_s}{10^3\thinspace {\rm km\thinspace s^{-1}}}\right)^2$ | Fully ionized gas; Eq. 36.28 |
-| Cooling time | $t_{\rm cool} \approx 7000\left(\dfrac{{\rm cm}^{-3}}{n_{H,0}}\right)\left(\dfrac{v_s}{100\thinspace {\rm km\thinspace s^{-1}}}\right)^{3.4}\thinspace {\rm yr}$ | $80 \lesssim v_s/{\rm km\thinspace s^{-1}} \lesssim 1200$; Eq. 36.33 |
-| | $\approx 7000\left(\dfrac{{\rm cm}^{-3}}{n_{H,0}}\right)\left(\dfrac{0.609\thinspace T_2}{\mu\cdot1.38\times10^5\thinspace {\rm K}}\right)^{1.7}\thinspace {\rm yr}$ | |
+| Radiative transition time | $t_{\rm cool} \approx 7000\thinspace Z^{-1}\left(\dfrac{{\rm cm}^{-3}}{n_{H,0}}\right)\left(\dfrac{v_s}{100\thinspace {\rm km\thinspace s^{-1}}}\right)^{3.4}\thinspace {\rm yr}$ | $80 \lesssim v_s/{\rm km\thinspace s^{-1}} \lesssim 1200$; Eq. 36.33 |
+| | $\approx 7000\thinspace Z^{-1}\left(\dfrac{{\rm cm}^{-3}}{n_{H,0}}\right)\left(\dfrac{0.609\thinspace T_2}{\mu\cdot1.38\times10^5\thinspace {\rm K}}\right)^{1.7}\thinspace {\rm yr}$ | |
 | Radiative shock density | $\rho_{\rm ps}/\rho_0 \approx v_s^2/c_{s,0}^2$ | After cooling to preshock $T$ |
+
+---
+
+## Supernova radiative phase quantities
+
+At the transition from Sedov-Taylor to the radiative (snowplow) phase:
+
+| Quantity | Expression |
+|:---|:---|
+| Radiative transition time | $t_{\rm cool} \approx 40\thinspace{\rm kyr}\thinspace Z^{-1/3}\left(\dfrac{E}{10^{51}\thinspace{\rm erg}}\right)^{0.22}\left(\dfrac{n_{H,0}}{1\thinspace{\rm cm}^{-3}}\right)^{-0.58}$ |
+| Radiative transition radius | $R_{\rm cool} \approx 24\thinspace{\rm pc}\thinspace Z^{-2/15}\left(\dfrac{E}{10^{51}\thinspace{\rm erg}}\right)^{0.29}\left(\dfrac{n_{H,0}}{1\thinspace{\rm cm}^{-3}}\right)^{-0.42}$ |
+| Terminal momentum | $p_{\rm cool} \approx 3\times10^5\thinspace M_\odot\thinspace{\rm km\thinspace s^{-1}}\thinspace Z^{-1/5}\left(\dfrac{E}{10^{51}\thinspace{\rm erg}}\right)^{0.94}\left(\dfrac{n_{H,0}}{1\thinspace{\rm cm}^{-3}}\right)^{-0.11}$ |
 
 ---
 
@@ -47,3 +59,4 @@ Strong shock conditions ($\mathcal{M} \equiv v_s/V_{\rm ms} \gg 1$), $\gamma = 5
 | $R_{\rm cool}$ | SNR radius at $t_{\rm cool}$ |
 | $p_{\rm cool}$ | Terminal momentum at $t_{\rm cool}$, $p_{\rm cool} = \frac{4\pi}{3}\rho_0 R_{\rm cool}^3 \dot{R}_{\rm cool}$ |
 | $\mu$ | Mean molecular weight (dimensionless); $\mu = 1.273$ for neutral HI, $\mu = 0.609$ for fully ionized gas (He/H = 0.1 by number) |
+| $Z$ | Gas metallicity in units of solar metallicity |
