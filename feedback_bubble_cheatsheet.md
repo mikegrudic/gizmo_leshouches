@@ -2,7 +2,7 @@
 
 | Mechanism | Shell radius $R_s(t)$ | Asymptotic scaling | Conditions |
 |:---|:---|:---|:---|
-| **Photoionization** | $R_s = R_{\rm St,0}\left(1 + \dfrac{7c_s t}{4R_{\rm St,0}}\right)^{4/7}$ | $R_s \propto t^{4/7}$ | Radiation pressure negligible compared to gas pressure | 
+| **Photoionization** | $R_s = R_{\rm St,0}\left(1 + \dfrac{7c_s t}{4R_{\rm St,0}}\right)^{4/7}$ | $R_s \propto t^{4/7}$ | Radiation pressure negligible compared to gas pressure; bubble expansion >> ambient sound speed | 
 | **Stellar winds** | $R_s = 0.76\left(\dfrac{\dot{M}v_w^2}{\rho_0}\right)^{1/5} t^{3/5}$ | $R_s \propto t^{3/5}$ | Wind bubble with hot, radiatively-inefficient shocked wind component has been established. |
 | **Radiation pressure** | $R_s = \left(\dfrac{3\dot{P}}{2\pi\rho_0}\right)^{1/4} t^{1/2}$ | $R_s \propto t^{1/2}$ | Photons absorbed in a thin optically-thick shell; also works for radiatively-efficient winds with $\dot{P}=\dot{M}v_{\rm w}$. |
 | **SNe: free expansion** | $R_s \approx v_{\rm ej}\thinspace  t$ | $R_s \propto t$ | Mass swept out is $<<M_{\rm ej}$ |
